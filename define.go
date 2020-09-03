@@ -15,7 +15,7 @@ const (
 )
 
 type Router interface {
-	Bind(address string, method int)
-	GetHandler(context *Context)Handler
+	Bind(address string, method int, handler Handler) error
+	GetHandler(context *Context) Handler
 }
 type Handler func(context *Context)

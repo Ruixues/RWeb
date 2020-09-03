@@ -31,3 +31,13 @@ func (z *DefaultRouter) Bind(address string, method int, handler Handler) error 
 	}
 	return nil
 }
+func (z *DefaultRouter) GetHandler(context *Context) Handler {
+	handler, ok := z.linker[context.RequestUri]
+	if !ok {
+		return nil
+	}
+	if handler.Method != MethodAll && context.Method != handler.Method {
+		return nil
+	}
+	return handler.Handler
+}

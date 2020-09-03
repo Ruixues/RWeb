@@ -17,15 +17,24 @@ func NewEngine(router Router) (e Engine) {
 	e.SetRouter(router)
 	return
 }
+func CtxToContext (ctx *fasthttp.RequestCtx) *Context {
+	context := NewContext()
+	defer RemoveContext(context)
+	context.Method = ToRWebMethod(ctx.Method())
+	context.RequestUri = string(ctx.Request.URI().Path())
+	context.RawCtx = ctx
+	return context
+}
 func (z *Engine) SetRouter(router Router) {
 	z.router = router
 }
 func (z *Engine) handler(ctx *fasthttp.RequestCtx) {
-	context := NewContext()
-	context.Method = ToRWebMethod(ctx.Method())
-	context.RequestUri = string(ctx.RequestURI())
-	z.router.GetHandler(context) (context)
-	RemoveContext(context)
+	context := CtxToContext(ctx)
+	handler := z.router.GetHandler(context)
+	if handler == nil {
+		return
+	}
+	handler(context)
 }
 func (z *Engine) RunAndServe(address string) error {
 	if z.router == nil {
@@ -34,5 +43,5 @@ func (z *Engine) RunAndServe(address string) error {
 	z.server = &fasthttp.Server{
 		Handler: z.handler,
 	}
-	return z.RunAndServe(address)
+	return z.server.ListenAndServe(address)
 }
