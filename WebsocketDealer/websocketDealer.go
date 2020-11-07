@@ -43,7 +43,7 @@ func New() (r WebsocketDealer) {
 }
 
 /**
-使用此函数作为引擎的绑定函数
+	使用此函数作为引擎的绑定函数
 */
 func (z*WebsocketDealer) Handler(context *RWeb.Context) {
 	err := z.upgrade.Upgrade(context.RawCtx, func(ws *websocket.Conn) {

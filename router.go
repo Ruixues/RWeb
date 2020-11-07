@@ -11,33 +11,67 @@ type bindData struct {
 }
 type DefaultRouter struct {
 	bindLock *sync.RWMutex
-	linker   map[string]*bindData
+	linker   map[string][]bindData
+	subRouter []Router
+	subRouterBuf map[string]Router
 }
 
 func NewDefaultRouter() (r DefaultRouter) {
 	r.bindLock = &sync.RWMutex{}
-	r.linker = make(map[string]*bindData)
+	r.linker = make(map[string][]bindData)
+	r.subRouter = make([]Router,0)
 	return
 }
 func (z *DefaultRouter) Bind(address string, method int, handler Handler) error {
 	z.bindLock.Lock()
 	defer z.bindLock.Unlock()
-	if _, ok := z.linker[address]; ok {
-		return errors.New("you are trying to bind a existed address")
+	if _,ok := z.linker[address];!ok {
+		z.linker[address] = make ([]bindData,0)
 	}
-	z.linker[address] = &bindData{
+	for _,v := range z.linker [address] {
+		if v.Method == method {
+			return errors.New("you are trying to bind an existed address")
+		}
+	}
+	z.linker[address] = append(z.linker[address], bindData{
 		Method:  method,
 		Handler: handler,
-	}
+	})
 	return nil
 }
 func (z *DefaultRouter) GetHandler(context *Context) Handler {
-	handler, ok := z.linker[context.RequestUri]
+	handlers, ok := z.linker[context.RequestUri]
 	if !ok {
-		return nil
+		return z.GetFromSubRouter(context)
 	}
-	if handler.Method != MethodAll && context.Method != handler.Method {
-		return nil
+	for _,v := range handlers {
+		if v.Method != MethodAll && v.Method != v.Method {
+			continue
+		}
+		return v.Handler
 	}
-	return handler.Handler
+	return z.GetFromSubRouter(context)
+}
+func (z *DefaultRouter) GetFromSubRouter (context *Context) Handler {
+	r,ok := z.subRouterBuf [context.RequestUri]
+	if ok {
+		if handler := r.GetHandler(context);handler != nil {
+			return handler
+		}
+		delete(z.subRouterBuf, context.RequestUri)
+	}
+	for _,router := range z.subRouter {
+		if handler := router.GetHandler(context);handler != nil {
+			z.subRouterBuf [context.RequestUri] = router
+			return handler
+		}
+	}
+	return nil
+}
+func (z *DefaultRouter) BindSubRouter (other Router) {
+	z.bindLock.Lock()
+	defer z.bindLock.Unlock()
+	// 开始挂载
+	z.subRouter = append(z.subRouter, other)
+	return
 }
