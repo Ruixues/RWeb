@@ -1,4 +1,4 @@
-module RWeb
+module github/Ruixue/RWeb
 
 go 1.15
 

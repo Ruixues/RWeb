@@ -12,7 +12,7 @@ func main() {
 		ctx.RawCtx.WriteString("test")
 	})
 	Engine := RWeb.NewEngine(&router)
-	err := Engine.RunAndServe(":1111")
+	err := Engine.RunAndServe("0.0.0.0:1111")
 	if err != nil {
 		fmt.Println(err)
 	}
