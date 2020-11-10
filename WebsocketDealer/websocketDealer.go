@@ -4,7 +4,7 @@
 package WebsocketDealer
 
 import (
-	"RWeb"
+	"github.com/Ruixues/RWeb"
 	"errors"
 	"github.com/fasthttp/websocket"
 	jsoniter "github.com/json-iterator/go"
@@ -17,7 +17,7 @@ const (
 	ModuleVersion = 0.1
 )
 
-type WebsocketDealFunction func(conn *Conn,arguments []interface{})
+type WebsocketDealFunction func(conn *Conn,arguments []interface{}) interface{}
 type WebsocketDealer struct {
 	link     map[string]WebsocketDealFunction
 	linkLock *sync.RWMutex
@@ -27,6 +27,7 @@ type WebsocketDealer struct {
 }
 
 func New() (r WebsocketDealer) {
+	Once.Do(InitWebsocketDealer)
 	r.link = make(map[string]WebsocketDealFunction)
 	r.linkLock = &sync.RWMutex{}
 	r.upgrade = websocket.FastHTTPUpgrader{
@@ -75,7 +76,29 @@ func (z*WebsocketDealer) Handler(context *RWeb.Context) {
 				Dealer = z.link [SMessage.Function]
 			} ()
 			if Dealer != nil {
-				Dealer (conn,SMessage.Argument)
+				data := Dealer (conn,SMessage.Argument)
+				if data == nil {
+					continue
+				}
+				func () {
+					res := ResponsePool.Get().(*WebsocketResponse)
+					defer ResponsePool.Put(res)
+					res.data = data
+					res.id = SMessage.Id
+					byte,err := json.Marshal(res)
+					if err != nil {
+						message := "Error when call function:" + SMessage.Function + " with data:" + string(message) + ".\n error:" + err.Error();
+						z.log.FrameworkPrintMessage(ModuleName,message,-1)
+						return
+					}
+					err = ws.WriteMessage(websocket.TextMessage,byte)
+					if err != nil {
+						message := "Error when call function:" + SMessage.Function + " with data:" + string(message) + ".\n error:" + err.Error();
+						z.log.FrameworkPrintMessage(ModuleName,message,-1)
+						return
+					}
+				} ()
+
 			}
 		}
 	})
