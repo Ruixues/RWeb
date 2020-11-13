@@ -17,6 +17,6 @@ const (
 type Router interface {
 	Bind(address string, method int, handler Handler) error
 	GetHandler(context *Context) Handler
-	BindSubRouter (Router)	// 挂载子路由
+	BindSubRouter(Router) // 挂载子路由
 }
 type Handler func(context *Context)

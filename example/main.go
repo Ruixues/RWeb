@@ -6,9 +6,9 @@ import (
 )
 
 func main() {
-	fmt.Println ("Go")
+	fmt.Println("Go")
 	router := RWeb.NewDefaultRouter()
-	router.Bind("/test",RWeb.MethodAll,func (ctx *RWeb.Context) {
+	router.Bind("/test", RWeb.MethodAll, func(ctx *RWeb.Context) {
 		ctx.RawCtx.WriteString("test")
 	})
 	Engine := RWeb.NewEngine(&router)

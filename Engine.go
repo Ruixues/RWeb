@@ -17,7 +17,7 @@ func NewEngine(router Router) (e Engine) {
 	e.SetRouter(router)
 	return
 }
-func CtxToContext (ctx *fasthttp.RequestCtx) *Context {
+func CtxToContext(ctx *fasthttp.RequestCtx) *Context {
 	context := NewContext()
 	defer RemoveContext(context)
 	context.Method = ToRWebMethod(ctx.Method())

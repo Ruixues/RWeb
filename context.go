@@ -8,11 +8,11 @@ import (
 type Context struct {
 	RequestUri string
 	Method     int
-	RawCtx *fasthttp.RequestCtx
+	RawCtx     *fasthttp.RequestCtx
 }
 
-var contextPool = &sync.Pool {
-	New: func () interface {}{
+var contextPool = &sync.Pool{
+	New: func() interface{} {
 		return new(Context)
 	},
 }
