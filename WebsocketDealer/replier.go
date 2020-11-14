@@ -18,7 +18,7 @@ func (z *Replier) Call(functionName string, args ...interface{}) (interface{}, e
 	call.Function = functionName
 	call.Argument = args
 	call.Id = atomic.AddUint64(z.idCounter, 1)
-
+	call.IsReply = true
 	byte, err := json.Marshal(call)
 	if err != nil {
 		return nil, err
