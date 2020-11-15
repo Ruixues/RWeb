@@ -10,7 +10,9 @@ type Context struct {
 	Method     int
 	RawCtx     *fasthttp.RequestCtx
 }
-
+func (z *Context) FormValue (key string) []byte {
+	return z.RawCtx.FormValue(key)
+}
 var contextPool = &sync.Pool{
 	New: func() interface{} {
 		return new(Context)

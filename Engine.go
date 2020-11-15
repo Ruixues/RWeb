@@ -19,7 +19,6 @@ func NewEngine(router Router) (e Engine) {
 }
 func CtxToContext(ctx *fasthttp.RequestCtx) *Context {
 	context := NewContext()
-	defer RemoveContext(context)
 	context.Method = ToRWebMethod(ctx.Method())
 	context.RequestUri = string(ctx.Request.URI().Path())
 	context.RawCtx = ctx
@@ -30,6 +29,7 @@ func (z *Engine) SetRouter(router Router) {
 }
 func (z *Engine) handler(ctx *fasthttp.RequestCtx) {
 	context := CtxToContext(ctx)
+	defer RemoveContext(context)
 	handler := z.router.GetHandler(context)
 	if handler == nil {
 		return
