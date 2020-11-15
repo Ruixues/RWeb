@@ -75,3 +75,22 @@ func (z *DefaultRouter) BindSubRouter(other Router) {
 	z.subRouter = append(z.subRouter, other)
 	return
 }
+func (z *DefaultRouter) LoadFromRouter(other Router) {
+	list := other.OutputRules();
+	for _,v := range list {
+		z.Bind(v.Address,v.Method,v.Handler)
+	}
+}
+func (z *DefaultRouter) OutputRules () []*RouterHandler {
+	ret := make ([]*RouterHandler,0)
+	for k,v := range z.linker {
+		for _, rule := range v {
+			ret = append(ret, &RouterHandler{
+				Address: k,
+				Handler: rule.Handler,
+				Method:  rule.Method,
+			})
+		}
+	}
+	return ret
+}
