@@ -1,3 +1,4 @@
+// deno-lint-ignore-file
 class StandardCall {
   public function: String = "";
   public argument: Array<any> = [];
@@ -13,6 +14,13 @@ class rweb {
   constructor(address: String) {
     this.address = address;
   }
+  private async sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve();
+      }, ms);
+    });
+  }
   private async onclose(): Promise<void> {
     // 准备重连
     this.conn = null;
@@ -20,18 +28,16 @@ class rweb {
       this.onClose();
     }
     await this.sleep(2000); // 两秒后重连
-    this.connect();
+    // const connect = this.connect;
+    // setTimeout(() => {
+    //   connect();
+    // }, 2000);
+    this.connect(); // ok
   }
   public bindF(name: String, f: Function): void {
     this.bindFunction.set(name, f);
   }
-  async sleep(ms: number) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve("");
-      }, ms);
-    });
-  }
+  
   private onMessage(message: any): void {
     message = String(message);
     let json: any = JSON.parse(message);
@@ -53,9 +59,12 @@ class rweb {
       console.log("Undefined function:" + json.function);
       return;
     }
-    let replier:Replier = new Replier (this,json.id,json.argument);
+    let replier: Replier = new Replier(this, json.id, json.argument);
   }
-  public directSend(data: String): void {
+  public async directSend(data: String): Promise<void> {
+    while (this.conn == null) {
+      await this.sleep(1000);
+    }
     this.conn.send(data.toString());
   }
   public async call(name: String, ...args: any): Promise<any> {
@@ -81,7 +90,7 @@ class rweb {
 }
 class reply {
   public data: any;
-  public id: String;
+  public id: String = "";
 }
 class Replier {
   private rweb: rweb;
@@ -99,4 +108,4 @@ class Replier {
     this.rweb.directSend(JSON.stringify(res));
   }
 }
-export { rweb, StandardCall };
+export { rweb };
