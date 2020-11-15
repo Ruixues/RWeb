@@ -15,12 +15,15 @@ type DefaultRouter struct {
 	subRouter    []Router
 	subRouterBuf map[string]Router
 	basicRoute string
+	interceptors []Interceptor
 }
 
 func NewDefaultRouter() (r DefaultRouter) {
 	r.bindLock = &sync.RWMutex{}
 	r.linker = make(map[string][]bindData)
 	r.subRouter = make([]Router, 0)
+	r.subRouterBuf = make(map[string]Router)
+	r.interceptors = make([]Interceptor,0)
 	return
 }
 func (z *DefaultRouter) SetBasicRoute (basic string) {
@@ -45,6 +48,11 @@ func (z *DefaultRouter) Bind(address string, method int, handler Handler) error 
 	return nil
 }
 func (z *DefaultRouter) GetHandler(context *Context) Handler {
+	for _,v := range z.interceptors {
+		if !v (context) {
+			return nil
+		}
+	}
 	handlers, ok := z.linker[context.RequestUri]
 	if !ok {
 		return z.GetFromSubRouter(context)
@@ -98,4 +106,7 @@ func (z *DefaultRouter) OutputRules () []*RouterHandler {
 		}
 	}
 	return ret
+}
+func (z *DefaultRouter) AddInterceptor (interceptor Interceptor) {
+	z.interceptors = append(z.interceptors, interceptor)
 }

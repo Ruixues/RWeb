@@ -24,5 +24,7 @@ type Router interface {
 	BindSubRouter(Router) // 挂载子路由
 	LoadFromRouter(Router)	// 复制子路由的数据
 	OutputRules () []*RouterHandler
+	AddInterceptor (interceptor Interceptor)
 }
+type Interceptor func(context *Context)bool	//为false的时候，将阻断调用
 type Handler func(context *Context)
