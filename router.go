@@ -14,6 +14,7 @@ type DefaultRouter struct {
 	linker       map[string][]bindData
 	subRouter    []Router
 	subRouterBuf map[string]Router
+	basicRoute string
 }
 
 func NewDefaultRouter() (r DefaultRouter) {
@@ -22,7 +23,11 @@ func NewDefaultRouter() (r DefaultRouter) {
 	r.subRouter = make([]Router, 0)
 	return
 }
+func (z *DefaultRouter) SetBasicRoute (basic string) {
+	z.basicRoute = basic
+}
 func (z *DefaultRouter) Bind(address string, method int, handler Handler) error {
+	address += z.basicRoute
 	z.bindLock.Lock()
 	defer z.bindLock.Unlock()
 	if _, ok := z.linker[address]; !ok {
