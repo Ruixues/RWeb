@@ -50,7 +50,7 @@ func New() (r WebsocketDealer) {
 }
 
 /**
-使用此函数作为引擎的绑定函数
+  使用此函数作为引擎的绑定函数
 */
 func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 	err := z.upgrade.Upgrade(context.RawCtx, func(ws *websocket.Conn) {
@@ -61,6 +61,25 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 		var MessageId = uint64(0)
 		s := NewSession()
 		defer sessionPool.Put(s)
+		ok := func () bool {
+			data := NewConnectDataPool.Get().(*NewConnectData)
+			data.Session = s
+			data.Context = context
+			if err := z.Events.RunEvent(EventNewConnection,func (message event.OnMessage) error {
+				ok := message (data).(bool)
+				if !ok {
+					return errors.New("unexpected error when run event listener")
+				}
+				return nil
+			});err != nil {
+				z.log.FrameworkPrintMessage(ModuleName, err.Error(), -2)
+				return false
+			}
+			return true
+		} ()
+		if !ok {
+			return
+		}
 		for {
 			_, message, err := ws.ReadMessage()
 			if err != nil {
