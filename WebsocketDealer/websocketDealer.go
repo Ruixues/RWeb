@@ -6,6 +6,7 @@ package WebsocketDealer
 import (
 	"errors"
 	"github.com/Ruixues/RWeb"
+	"github.com/Ruixues/RWeb/event"
 	"github.com/fasthttp/websocket"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
@@ -19,7 +20,7 @@ const (
 	ModuleVersion = 0.2
 )
 
-type WebsocketDealFunction func(replier *Replier, arguments []interface{})
+type WebsocketDealFunction func(replier *Replier, session *Session, arguments []interface{})
 type WebsocketDealer struct {
 	link          map[string]WebsocketDealFunction
 	linkLock      *sync.RWMutex
@@ -27,6 +28,7 @@ type WebsocketDealer struct {
 	OriginCheck   func(ctx *RWeb.Context) bool
 	log           RWeb.Log
 	callReplyBind map[uint64]chan StandardReply
+	Events event.System
 }
 
 func New() (r WebsocketDealer) {
@@ -43,6 +45,7 @@ func New() (r WebsocketDealer) {
 		},
 		EnableCompression: true,
 	}
+	r.Events = event.New(EventNum)
 	return
 }
 
@@ -56,7 +59,8 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 		defer ws.Close()
 		var SMessage StandardCall
 		var MessageId = uint64(0)
-		// 开始构建 Replier
+		s := NewSession()
+		defer sessionPool.Put(s)
 		for {
 			_, message, err := ws.ReadMessage()
 			if err != nil {
@@ -78,7 +82,7 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 						z.log.FrameworkPrintMessage(ModuleName, err.Error(), -2)
 						return
 					}
-					c,ok := z.callReplyBind[real.Id]
+					c, ok := z.callReplyBind[real.Id]
 					if !ok {
 						return
 					}
@@ -104,7 +108,7 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 					defer replierPool.Put(replier)
 					replier.conn = ws
 					replier.idCounter = &MessageId
-					Dealer(replier, SMessage.Argument)
+					Dealer(replier, s, SMessage.Argument)
 				}(Dealer, SMessage)
 			}
 		}
@@ -130,5 +134,5 @@ func (z *WebsocketDealer) BindReplyId(id uint64, c chan StandardReply) {
 	z.callReplyBind[id] = c
 }
 func (z *WebsocketDealer) RemoveBindReplyId(id uint64) {
-	delete(z.callReplyBind,id)
+	delete(z.callReplyBind, id)
 }

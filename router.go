@@ -14,7 +14,7 @@ type DefaultRouter struct {
 	linker       map[string][]bindData
 	subRouter    []Router
 	subRouterBuf map[string]Router
-	basicRoute string
+	basicRoute   string
 	interceptors []Interceptor
 }
 
@@ -23,10 +23,10 @@ func NewDefaultRouter() (r DefaultRouter) {
 	r.linker = make(map[string][]bindData)
 	r.subRouter = make([]Router, 0)
 	r.subRouterBuf = make(map[string]Router)
-	r.interceptors = make([]Interceptor,0)
+	r.interceptors = make([]Interceptor, 0)
 	return
 }
-func (z *DefaultRouter) SetBasicRoute (basic string) {
+func (z *DefaultRouter) SetBasicRoute(basic string) {
 	z.basicRoute = basic
 }
 func (z *DefaultRouter) Bind(address string, method int, handler Handler) error {
@@ -48,8 +48,8 @@ func (z *DefaultRouter) Bind(address string, method int, handler Handler) error 
 	return nil
 }
 func (z *DefaultRouter) GetHandler(context *Context) Handler {
-	for _,v := range z.interceptors {
-		if !v (context) {
+	for _, v := range z.interceptors {
+		if !v(context) {
 			return nil
 		}
 	}
@@ -89,14 +89,14 @@ func (z *DefaultRouter) BindSubRouter(other Router) {
 	return
 }
 func (z *DefaultRouter) LoadFromRouter(other Router) {
-	list := other.OutputRules();
-	for _,v := range list {
-		z.Bind(v.Address,v.Method,v.Handler)
+	list := other.OutputRules()
+	for _, v := range list {
+		z.Bind(v.Address, v.Method, v.Handler)
 	}
 }
-func (z *DefaultRouter) OutputRules () []*RouterHandler {
-	ret := make ([]*RouterHandler,0)
-	for k,v := range z.linker {
+func (z *DefaultRouter) OutputRules() []*RouterHandler {
+	ret := make([]*RouterHandler, 0)
+	for k, v := range z.linker {
 		for _, rule := range v {
 			ret = append(ret, &RouterHandler{
 				Address: k,
@@ -107,6 +107,6 @@ func (z *DefaultRouter) OutputRules () []*RouterHandler {
 	}
 	return ret
 }
-func (z *DefaultRouter) AddInterceptor (interceptor Interceptor) {
+func (z *DefaultRouter) AddInterceptor(interceptor Interceptor) {
 	z.interceptors = append(z.interceptors, interceptor)
 }

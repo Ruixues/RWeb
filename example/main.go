@@ -5,7 +5,8 @@ import (
 	"github.com/Ruixues/RWeb"
 	"github.com/Ruixues/RWeb/WebsocketDealer"
 )
-func t (replier *WebsocketDealer.Replier, arguments []interface{}){
+
+func t(replier *WebsocketDealer.Replier, arguments []interface{}) {
 	replier.Return("Hello World!!")
 }
 func main() {
@@ -15,8 +16,8 @@ func main() {
 		ctx.RawCtx.WriteString("test")
 	})
 	ws := WebsocketDealer.New()
-	router.Bind("/t",RWeb.MethodAll,ws.Handler)
-	ws.BindFunction("test",t)
+	router.Bind("/t", RWeb.MethodAll, ws.Handler)
+	ws.BindFunction("test", t)
 	Engine := RWeb.NewEngine(&router)
 	err := Engine.RunAndServe("0.0.0.0:1111")
 	if err != nil {
