@@ -89,7 +89,7 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 		defer func() {
 			z.lockConnections.Lock()
 			defer z.lockConnections.Unlock()
-			ws.Close()
+			_ = ws.Close()
 			if myId == 0 {
 				return
 			}
