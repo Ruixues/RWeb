@@ -13,6 +13,9 @@ var chanBoolPool = sync.Pool{New: func() interface{} {
 }}
 
 func (z *Replier) Call(functionName string, args ...interface{}) (interface{}, error) {
+	if z.id == 0 {
+		panic("Unexpected call to reply.It is not a real replier.Just a caller")
+	}
 	call := requestPool.Get().(*StandardCall)
 	defer requestPool.Put(call)
 	call.Function = functionName

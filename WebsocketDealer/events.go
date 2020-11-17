@@ -10,12 +10,14 @@ const (
 	EventNewConnection = iota
 	/*
 	 EventNewConnection call with *NewConnectData
-	 */
+	*/
 )
-type NewConnectData struct {
+
+type ConnectData struct {
 	Session *Session
 	Context *RWeb.Context
 }
+
 var NewConnectDataPool = sync.Pool{New: func() interface{} {
-	return new (NewConnectData)
+	return new(ConnectData)
 }}

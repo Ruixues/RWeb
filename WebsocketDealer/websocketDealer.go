@@ -22,13 +22,16 @@ const (
 
 type WebsocketDealFunction func(replier *Replier, session *Session, arguments []interface{})
 type WebsocketDealer struct {
-	link          map[string]WebsocketDealFunction
-	linkLock      *sync.RWMutex
-	upgrade       websocket.FastHTTPUpgrader // use default options
-	OriginCheck   func(ctx *RWeb.Context) bool
-	log           RWeb.Log
-	callReplyBind map[uint64]chan StandardReply
-	Events event.System
+	link            map[string]WebsocketDealFunction
+	linkLock        *sync.RWMutex
+	upgrade         websocket.FastHTTPUpgrader // use default options
+	OriginCheck     func(ctx *RWeb.Context) bool
+	log             RWeb.Log
+	callReplyBind   map[uint64]chan StandardReply
+	Events          event.System
+	connections     []*ConnectData
+	lockConnections *sync.RWMutex
+	connectionNum   uint64
 }
 
 func New() (r WebsocketDealer) {
@@ -45,41 +48,92 @@ func New() (r WebsocketDealer) {
 		},
 		EnableCompression: true,
 	}
+	r.connections = make([]*ConnectData, 0)
+	r.lockConnections = &sync.RWMutex{}
 	r.Events = event.New(EventNum)
 	return
 }
-
+type Ranger func(data *ConnectData, replier *Replier) error
+func (z *WebsocketDealer) BroadCast(ranger Ranger) error {
+	z.lockConnections.RLock()
+	defer z.lockConnections.RUnlock()
+	for _,v := range z.connections {
+		replier := replierPool.Get().(*Replier)
+		replier.id = 0
+		replier.fa = z
+		if err := ranger (v,replier);err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (z *WebsocketDealer) BroadCastIdRange (ranger Ranger,ids []uint64) error {
+	z.lockConnections.RLock()
+	defer z.lockConnections.RUnlock()
+	for _,id := range ids {
+		replier := replierPool.Get().(*Replier)
+		replier.id = 0
+		replier.fa = z
+		if err := ranger (z.connections [id],replier);err != nil {
+			return err
+		}
+	}
+	return nil
+}
 /**
   使用此函数作为引擎的绑定函数
 */
 func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 	err := z.upgrade.Upgrade(context.RawCtx, func(ws *websocket.Conn) {
+		var myId = uint64(0)
+		defer func() {
+			z.lockConnections.Lock()
+			defer z.lockConnections.Unlock()
+			ws.Close()
+			if myId == 0 {
+				return
+			}
+			if myId > (z.connectionNum >> 1) { //应该把后面的合并到前面去
+				z.connections = append(z.connections[:myId-1], z.connections[myId:]...)
+			} else {
+				z.connections = append(z.connections[myId:], z.connections[:myId-1]...)
+			}
+			z.connectionNum = z.connectionNum - 1
+		}()
 		conn := newConn(ws)
 		defer removeConn(conn)
-		defer ws.Close()
 		var SMessage StandardCall
-		var MessageId = uint64(0)
+		var MessageId = uint64(1)
 		s := NewSession()
 		defer sessionPool.Put(s)
-		ok := func () bool {
-			data := NewConnectDataPool.Get().(*NewConnectData)
+		ok := func() bool {
+			data := NewConnectDataPool.Get().(*ConnectData)
 			data.Session = s
 			data.Context = context
-			if err := z.Events.RunEvent(EventNewConnection,func (message event.OnMessage) error {
-				ok := message (data).(bool)
+			if err := z.Events.RunEvent(EventNewConnection, func(message event.OnMessage) error {
+				ok := message(data).(bool)
 				if !ok {
 					return errors.New("unexpected error when run event listener")
 				}
 				return nil
-			});err != nil {
+			}); err != nil {
 				z.log.FrameworkPrintMessage(ModuleName, err.Error(), -2)
 				return false
 			}
 			return true
-		} ()
+		}()
 		if !ok {
 			return
 		}
+		func() {
+			z.lockConnections.Lock()
+			defer z.lockConnections.Unlock()
+			z.connections = append(z.connections, &ConnectData{
+				Session: s,
+				Context: context,
+			})
+			myId = uint64(len(z.connections))
+		}()
 		for {
 			_, message, err := ws.ReadMessage()
 			if err != nil {

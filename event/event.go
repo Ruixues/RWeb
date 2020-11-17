@@ -22,10 +22,11 @@ func (z *System) On(Event uint64, Handler OnMessage) {
 	}
 	z.link[Event] = append(z.link[Event], Handler)
 }
+
 // If runner returns false,the RunEvent will quit with an error from that function
-func (z *System) RunEvent (Event uint64,Runner func (message OnMessage)error) error {
-	for _,k := range z.link [Event] {
-		if err := Runner(k);err != nil {
+func (z *System) RunEvent(Event uint64, Runner func(message OnMessage) error) error {
+	for _, k := range z.link[Event] {
+		if err := Runner(k); err != nil {
 			return err
 		}
 	}
