@@ -1,5 +1,5 @@
-github.com/Ruixues/RWeb v0.0.5 h1:Y8G62U7atBbKf/H17qzmLzxppYJ0E3iGYHGUBzNET2s=
-github.com/Ruixues/RWeb v0.0.5/go.mod h1:nRyJcXGF0/W75THRZCHZX3BVFYol61tVRahyy9q7SO8=
+github.com/Ruixues/RWeb v0.0.12 h1:ThcFegfG4Qp6idhQVlZ/8XorTBT9yh4F73Fs/yOy184=
+github.com/Ruixues/RWeb v0.0.12/go.mod h1:nRyJcXGF0/W75THRZCHZX3BVFYol61tVRahyy9q7SO8=
 github.com/andybalholm/brotli v1.0.0 h1:7UCwP93aiSfvWpapti8g88vVVGp2qqtGyePsSuDafo4=
 github.com/andybalholm/brotli v1.0.0/go.mod h1:loMXtMfwqflxFJPmdbJO0a3KNoPuLBgiu3qAvBg8x/Y=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
