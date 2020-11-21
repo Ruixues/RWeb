@@ -2,24 +2,25 @@ package WebsocketDealer
 
 import (
 	"github.com/fasthttp/websocket"
+	jsoniter "github.com/json-iterator/go"
 	"sync"
 )
 
 type StandardCall struct {
 	Function string        `json:"function"`
 	Argument []interface{} `json:"argument"`
-	Id       uint64        `json:"id"`
-	IsReply  bool          `json:"reply"` //只是保留，客户端不需要实现 若为Reply时，需要设置为true
+	Id       jsoniter.Number        `json:"id"`
+	IsReply  bool            `json:"reply"` //只是保留，客户端不需要实现 若为Reply时，需要设置为true
 }
 type StandardReply struct {
-	Id   uint64      `json:"id"`
-	Data interface{} `json:"data"`
+	Id jsoniter.Number `json:"id"`
+	Data string `json:"data"`
 }
 type Replier struct { //回复者
 	conn      *websocket.Conn
 	idCounter *uint64
 	fa        *WebsocketDealer
-	id        uint64
+	id        jsoniter.Number
 }
 
 var replierPool = &sync.Pool{
@@ -48,8 +49,9 @@ func removeConn(conn *Conn) {
 }
 
 type WebsocketResponse struct {
-	id   uint64      `json:"id"`
-	data interface{} `json:"data"`
+	Id jsoniter.Number `json:"id"`
+	Data interface{}     `json:"data"`
+	Tmp float64 `json:"tmp"`
 }
 
 var responsePool = &sync.Pool{

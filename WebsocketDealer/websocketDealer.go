@@ -8,18 +8,17 @@ import (
 	"github.com/Ruixues/RWeb"
 	"github.com/Ruixues/RWeb/event"
 	"github.com/fasthttp/websocket"
-	jsoniter "github.com/json-iterator/go"
+	"github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
 	"sync"
 )
 
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 const (
 	ModuleName    = "WebsocketDealer"
 	ModuleVersion = 0.2
 )
-
+var json = jsoniter.ConfigFastest	//最快速度
 type WebsocketDealFunction func(replier *Replier, session *Session, arguments []interface{})
 type WebsocketDealer struct {
 	link            map[string]WebsocketDealFunction
@@ -48,38 +47,42 @@ func New() (r WebsocketDealer) {
 		},
 		EnableCompression: true,
 	}
+	r.log = &RWeb.DefaultLog{}
 	r.connections = make([]*ConnectData, 0)
 	r.lockConnections = &sync.RWMutex{}
 	r.Events = event.New(EventNum)
 	return
 }
+
 type Ranger func(data *ConnectData, replier *Replier) error
+
 func (z *WebsocketDealer) BroadCast(ranger Ranger) error {
 	z.lockConnections.RLock()
 	defer z.lockConnections.RUnlock()
-	for _,v := range z.connections {
+	for _, v := range z.connections {
 		replier := replierPool.Get().(*Replier)
-		replier.id = 0
+		replier.id = jsoniter.Number(0)
 		replier.fa = z
-		if err := ranger (v,replier);err != nil {
+		if err := ranger(v, replier); err != nil {
 			return err
 		}
 	}
 	return nil
 }
-func (z *WebsocketDealer) BroadCastIdRange (ranger Ranger,ids []uint64) error {
+func (z *WebsocketDealer) BroadCastIdRange(ranger Ranger, ids []uint64) error {
 	z.lockConnections.RLock()
 	defer z.lockConnections.RUnlock()
-	for _,id := range ids {
+	for _, id := range ids {
 		replier := replierPool.Get().(*Replier)
-		replier.id = 0
+		replier.id = jsoniter.Number(0)
 		replier.fa = z
-		if err := ranger (z.connections [id],replier);err != nil {
+		if err := ranger(z.connections[id], replier); err != nil {
 			return err
 		}
 	}
 	return nil
 }
+
 /**
   使用此函数作为引擎的绑定函数
 */
@@ -102,7 +105,6 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 		}()
 		conn := newConn(ws)
 		defer removeConn(conn)
-		var SMessage StandardCall
 		var MessageId = uint64(1)
 		s := NewSession()
 		defer sessionPool.Put(s)
@@ -135,6 +137,7 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 			myId = uint64(len(z.connections))
 		}()
 		for {
+			var SMessage StandardCall
 			_, message, err := ws.ReadMessage()
 			if err != nil {
 				z.log.FrameworkPrintMessage(ModuleName, err.Error(), -2)
@@ -142,7 +145,7 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 			}
 			//开始处理到标准格式
 			SMessage.IsReply = false
-			err = json.Unmarshal(message, &SMessage)
+			err = json.Unmarshal(message,&SMessage)
 			if err != nil {
 				z.log.FrameworkPrintMessage(ModuleName, err.Error(), -2)
 				break
@@ -155,12 +158,17 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 						z.log.FrameworkPrintMessage(ModuleName, err.Error(), -2)
 						return
 					}
-					c, ok := z.callReplyBind[real.Id]
+					id, err := real.Id.Int64()
+					if err != nil {
+						z.log.FrameworkPrintMessage(ModuleName, err.Error(), -2)
+						return
+					}
+					c, ok := z.callReplyBind[uint64(id)]
 					if !ok {
 						return
 					}
 					c <- real
-					delete(z.callReplyBind, SMessage.Id)
+					delete(z.callReplyBind, uint64(id))
 				}()
 				continue
 			}
@@ -181,6 +189,7 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 					defer replierPool.Put(replier)
 					replier.conn = ws
 					replier.idCounter = &MessageId
+					replier.id = SMessage.Id
 					Dealer(replier, s, SMessage.Argument)
 				}(Dealer, SMessage)
 			}

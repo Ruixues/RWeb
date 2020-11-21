@@ -9,7 +9,7 @@ const EventNum = 1
 const (
 	EventNewConnection = iota
 	/*
-	 EventNewConnection call with *NewConnectData
+	 	EventNewConnection call with *NewConnectData
 	*/
 )
 

@@ -6,8 +6,11 @@ import (
 	"github.com/Ruixues/RWeb/WebsocketDealer"
 )
 
-func t(replier *WebsocketDealer.Replier,session *WebsocketDealer.Session, arguments []interface{}) {
-	replier.Return("Hello World!!")
+func t(replier *WebsocketDealer.Replier, session *WebsocketDealer.Session, arguments []interface{}) {
+	err := replier.Return("Hello World!!")
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 func main() {
 	fmt.Println("Go")
