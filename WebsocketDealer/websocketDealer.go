@@ -86,6 +86,8 @@ func (z *WebsocketDealer) BroadCastIdRange(ranger Ranger, ids []uint64) error {
   使用此函数作为引擎的绑定函数
 */
 func (z *WebsocketDealer) Handler(context *RWeb.Context) {
+	s := NewSession()
+	defer sessionPool.Put(s)
 	err := z.upgrade.Upgrade(context.RawCtx, func(ws *websocket.Conn) {
 		var myId = uint64(0)
 		defer func() {
@@ -102,11 +104,7 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 			}
 			z.connectionNum = z.connectionNum - 1
 		}()
-		conn := newConn(ws)
-		defer removeConn(conn)
 		var MessageId = uint64(1)
-		s := NewSession()
-		defer sessionPool.Put(s)
 		ok := func() bool {
 			data := NewConnectDataPool.Get().(*ConnectData)
 			data.Session = s
@@ -208,6 +206,18 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 		if _, ok := err.(websocket.HandshakeError); ok {
 			z.log.FrameworkPrintMessage(ModuleName, err.Error(), -1)
 		}
+		// 连接断开，开始调用 拦截器
+		data := NewConnectDataPool.Get().(*ConnectData)
+		defer NewConnectDataPool.Put(data)
+		data.Session = s
+		data.Context = context
+		z.Events.RunEvent(EventConnectionClose, func(message event.OnMessage) error {
+			ok := message(data).(bool)
+			if !ok {
+				return errors.New("unexpected error when run event listener")
+			}
+			return nil
+		});
 		return
 	}
 }

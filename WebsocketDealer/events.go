@@ -5,11 +5,16 @@ import (
 	"sync"
 )
 
-const EventNum = 1
+const EventNum = 2
 const (
 	EventNewConnection = iota
 	/*
 	 	EventNewConnection call with *NewConnectData
+	*/
+	EventConnectionClose
+	/*
+		EventConnectionClose call with *NewConnectData.
+		But you shouldn't write any data cause the connection had been close.
 	*/
 )
 
