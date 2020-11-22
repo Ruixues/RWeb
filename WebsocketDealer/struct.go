@@ -21,6 +21,8 @@ type Replier struct { //回复者
 	idCounter *uint64
 	fa        *WebsocketDealer
 	id        jsoniter.Number
+	bindReplyId func (id uint64, c chan StandardReply)
+	removeBindReplyId func (id uint64)
 }
 
 var replierPool = &sync.Pool{
@@ -51,7 +53,6 @@ func removeConn(conn *Conn) {
 type WebsocketResponse struct {
 	Id jsoniter.Number `json:"id"`
 	Data interface{}     `json:"data"`
-	Tmp float64 `json:"tmp"`
 }
 
 var responsePool = &sync.Pool{

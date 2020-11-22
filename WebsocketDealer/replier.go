@@ -4,8 +4,8 @@ import (
 	"errors"
 	"github.com/fasthttp/websocket"
 	jsoniter "github.com/json-iterator/go"
+	"strconv"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -18,22 +18,22 @@ func (z *Replier) Call(functionName string, args ...interface{}) (interface{}, e
 	defer requestPool.Put(call)
 	call.Function = functionName
 	call.Argument = args
-	id := atomic.AddUint64(z.idCounter, 1)
-	call.Id = jsoniter.Number(id)
+	id := uint64(1)
+	call.Id = jsoniter.Number(strconv.FormatUint(id,10))
 	call.IsReply = true
 	byte, err := jsoniter.Marshal(call)
 	if err != nil {
 		return nil, err
 	}
 	c := chanBoolPool.Get().(chan StandardReply)
-	z.fa.BindReplyId(id, c)
+	z.bindReplyId(id, c)
 	z.conn.WriteMessage(websocket.TextMessage, byte)
 	// 开始检测超时
 	select {
 	case <-time.After(time.Second * 3):
 		// 开始移除绑定
-		z.fa.RemoveBindReplyId(id)
-		return nil, errors.New("call time out")
+		z.removeBindReplyId(id)
+		return nil, errors.New("timeout")
 	case reply := <-c:
 		return reply.Data, nil
 	}

@@ -26,7 +26,6 @@ type WebsocketDealer struct {
 	upgrade         websocket.FastHTTPUpgrader // use default options
 	OriginCheck     func(ctx *RWeb.Context) bool
 	log             RWeb.Log
-	callReplyBind   map[uint64]chan StandardReply
 	Events          event.System
 	connections     []*ConnectData
 	lockConnections *sync.RWMutex
@@ -61,7 +60,7 @@ func (z *WebsocketDealer) BroadCast(ranger Ranger) error {
 	defer z.lockConnections.RUnlock()
 	for _, v := range z.connections {
 		replier := replierPool.Get().(*Replier)
-		replier.id = jsoniter.Number(0)
+		replier.id = jsoniter.Number("0")
 		replier.fa = z
 		if err := ranger(v, replier); err != nil {
 			return err
@@ -74,7 +73,7 @@ func (z *WebsocketDealer) BroadCastIdRange(ranger Ranger, ids []uint64) error {
 	defer z.lockConnections.RUnlock()
 	for _, id := range ids {
 		replier := replierPool.Get().(*Replier)
-		replier.id = jsoniter.Number(0)
+		replier.id = jsoniter.Number("0")
 		replier.fa = z
 		if err := ranger(z.connections[id], replier); err != nil {
 			return err
@@ -136,6 +135,13 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 			})
 			myId = uint64(len(z.connections))
 		}()
+		callReplyBind := make(map[uint64]chan StandardReply)
+		bindReplyId := func (id uint64, c chan StandardReply) {
+			callReplyBind [id] = c
+		}
+		removeBindReplyId := func (id uint64) {
+			delete (callReplyBind,id)
+		}
 		for {
 			var SMessage StandardCall
 			_, message, err := ws.ReadMessage()
@@ -163,12 +169,12 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 						z.log.FrameworkPrintMessage(ModuleName, err.Error(), -2)
 						return
 					}
-					c, ok := z.callReplyBind[uint64(id)]
+					c, ok := callReplyBind[uint64(id)]
 					if !ok {
 						return
 					}
 					c <- real
-					delete(z.callReplyBind, uint64(id))
+					delete(callReplyBind, uint64(id))
 				}()
 				continue
 			}
@@ -188,8 +194,10 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 					replier := replierPool.Get().(*Replier)
 					defer replierPool.Put(replier)
 					replier.conn = ws
+					replier.bindReplyId = bindReplyId
 					replier.idCounter = &MessageId
 					replier.id = SMessage.Id
+					replier.removeBindReplyId = removeBindReplyId
 					Dealer(replier, s, SMessage.Argument)
 				}(Dealer, SMessage)
 			}
@@ -211,10 +219,4 @@ func (z *WebsocketDealer) BindFunction(FunctionName string, Function WebsocketDe
 	}
 	z.link[FunctionName] = Function
 	return nil
-}
-func (z *WebsocketDealer) BindReplyId(id uint64, c chan StandardReply) {
-	z.callReplyBind[id] = c
-}
-func (z *WebsocketDealer) RemoveBindReplyId(id uint64) {
-	delete(z.callReplyBind, id)
 }
