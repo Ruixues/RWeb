@@ -10,15 +10,16 @@ import (
 	"github.com/fasthttp/websocket"
 	"github.com/json-iterator/go"
 	"github.com/valyala/fasthttp"
+	"strconv"
 	"sync"
 )
-
 
 const (
 	ModuleName    = "WebsocketDealer"
 	ModuleVersion = 0.2
 )
-var json = jsoniter.ConfigFastest	//最快速度
+
+var json = jsoniter.ConfigFastest //最快速度
 type WebsocketDealFunction func(replier *Replier, session *Session, arguments []interface{})
 type WebsocketDealer struct {
 	link            map[string]WebsocketDealFunction
@@ -30,6 +31,7 @@ type WebsocketDealer struct {
 	connections     []*ConnectData
 	lockConnections *sync.RWMutex
 	connectionNum   uint64
+	idPool NumberPool
 }
 
 func New() (r WebsocketDealer) {
@@ -50,19 +52,17 @@ func New() (r WebsocketDealer) {
 	r.connections = make([]*ConnectData, 0)
 	r.lockConnections = &sync.RWMutex{}
 	r.Events = event.New(EventNum)
+	r.idPool = NewNumberPool(10)
 	return
 }
 
-type Ranger func(data *ConnectData, replier *Replier) error
+type Ranger func(data *ConnectData) error
 
 func (z *WebsocketDealer) BroadCast(ranger Ranger) error {
 	z.lockConnections.RLock()
 	defer z.lockConnections.RUnlock()
 	for _, v := range z.connections {
-		replier := replierPool.Get().(*Replier)
-		replier.id = jsoniter.Number("0")
-		replier.fa = z
-		if err := ranger(v, replier); err != nil {
+		if err := ranger(v); err != nil {
 			return err
 		}
 	}
@@ -72,10 +72,14 @@ func (z *WebsocketDealer) BroadCastIdRange(ranger Ranger, ids []uint64) error {
 	z.lockConnections.RLock()
 	defer z.lockConnections.RUnlock()
 	for _, id := range ids {
-		replier := replierPool.Get().(*Replier)
-		replier.id = jsoniter.Number("0")
-		replier.fa = z
-		if err := ranger(z.connections[id], replier); err != nil {
+		if uint64(len(z.connections)) <= id {	//不存在
+			return errors.New("unused id:" + strconv.FormatUint(id,10))
+		}
+		connection := z.connections [id]
+		if connection == nil {
+			return errors.New("unused id:" + strconv.FormatUint(id,10))
+		}
+		if err := ranger(connection); err != nil {
 			return err
 		}
 	}
@@ -97,19 +101,32 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 			if myId == 0 {
 				return
 			}
-			if myId > (z.connectionNum >> 1) { //应该把后面的合并到前面去
-				z.connections = append(z.connections[:myId-1], z.connections[myId:]...)
-			} else {
-				z.connections = append(z.connections[myId:], z.connections[:myId-1]...)
-			}
+			replierPool.Put(z.connections [myId].Caller)
+			z.connections [myId] = nil
 			z.connectionNum = z.connectionNum - 1
 		}()
 		var MessageId = uint64(1)
+		callReplyBind := make(map[uint64]chan StandardReply)
+		bindReplyId := func(id uint64, c chan StandardReply) {
+			callReplyBind[id] = c
+		}
+		removeBindReplyId := func(id uint64) {
+			delete(callReplyBind, id)
+		}
+		makeReplier := func() *Replier {
+			replier := replierPool.Get().(*Replier)
+			replier.conn = ws
+			replier.bindReplyId = bindReplyId
+			replier.removeBindReplyId = removeBindReplyId
+			replier.idCounter = &MessageId
+			return replier
+		}
 		ok := func() bool {
 			data := NewConnectDataPool.Get().(*ConnectData)
 			data.Session = s
 			data.Context = context
 			if err := z.Events.RunEvent(EventNewConnection, func(message event.OnMessage) error {
+				data.Caller = makeReplier()
 				ok := message(data).(bool)
 				if !ok {
 					return errors.New("unexpected error when run event listener")
@@ -127,19 +144,19 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 		func() {
 			z.lockConnections.Lock()
 			defer z.lockConnections.Unlock()
-			z.connections = append(z.connections, &ConnectData{
+			myId = z.idPool.Get()
+			data := &ConnectData{
 				Session: s,
 				Context: context,
-			})
-			myId = uint64(len(z.connections))
+				Caller: makeReplier(),
+			}
+			if uint64(len(z.connections)) <= myId {
+				z.connections = append(z.connections, data)
+			} else {
+				z.connections [myId] = data
+			}
 		}()
-		callReplyBind := make(map[uint64]chan StandardReply)
-		bindReplyId := func (id uint64, c chan StandardReply) {
-			callReplyBind [id] = c
-		}
-		removeBindReplyId := func (id uint64) {
-			delete (callReplyBind,id)
-		}
+
 		for {
 			var SMessage StandardCall
 			_, message, err := ws.ReadMessage()
@@ -149,7 +166,7 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 			}
 			//开始处理到标准格式
 			SMessage.IsReply = false
-			err = json.Unmarshal(message,&SMessage)
+			err = json.Unmarshal(message, &SMessage)
 			if err != nil {
 				z.log.FrameworkPrintMessage(ModuleName, err.Error(), -2)
 				break
@@ -189,13 +206,9 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 			}()
 			if Dealer != nil {
 				go func(Dealer WebsocketDealFunction, SMessage StandardCall) {
-					replier := replierPool.Get().(*Replier)
+					replier := makeReplier()
 					defer replierPool.Put(replier)
-					replier.conn = ws
-					replier.bindReplyId = bindReplyId
-					replier.idCounter = &MessageId
 					replier.id = SMessage.Id
-					replier.removeBindReplyId = removeBindReplyId
 					Dealer(replier, s, SMessage.Argument)
 				}(Dealer, SMessage)
 			}
@@ -217,7 +230,7 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 				return errors.New("unexpected error when run event listener")
 			}
 			return nil
-		});
+		})
 		return
 	}
 }

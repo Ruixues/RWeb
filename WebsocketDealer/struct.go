@@ -7,22 +7,21 @@ import (
 )
 
 type StandardCall struct {
-	Function string        `json:"function"`
-	Argument []interface{} `json:"argument"`
-	Id       jsoniter.Number        `json:"id"`
+	Function string          `json:"function"`
+	Argument []interface{}   `json:"argument"`
+	Id       jsoniter.Number `json:"id"`
 	IsReply  bool            `json:"reply"` //只是保留，客户端不需要实现 若为Reply时，需要设置为true
 }
 type StandardReply struct {
-	Id jsoniter.Number `json:"id"`
-	Data string `json:"data"`
+	Id   jsoniter.Number `json:"id"`
+	Data string          `json:"data"`
 }
 type Replier struct { //回复者
-	conn      *websocket.Conn
-	idCounter *uint64
-	fa        *WebsocketDealer
-	id        jsoniter.Number
-	bindReplyId func (id uint64, c chan StandardReply)
-	removeBindReplyId func (id uint64)
+	conn              *websocket.Conn
+	idCounter         *uint64
+	id                jsoniter.Number
+	bindReplyId       func(id uint64, c chan StandardReply)
+	removeBindReplyId func(id uint64)
 }
 
 var replierPool = &sync.Pool{
@@ -51,7 +50,7 @@ func removeConn(conn *Conn) {
 }
 
 type WebsocketResponse struct {
-	Id jsoniter.Number `json:"id"`
+	Id   jsoniter.Number `json:"id"`
 	Data interface{}     `json:"data"`
 }
 

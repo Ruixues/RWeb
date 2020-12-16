@@ -9,7 +9,8 @@ const EventNum = 2
 const (
 	EventNewConnection = iota
 	/*
-	 	EventNewConnection call with *NewConnectData
+		 	EventNewConnection call with *NewConnectData
+			The caller of NewConnectData won't be collected.
 	*/
 	EventConnectionClose
 	/*
@@ -21,6 +22,7 @@ const (
 type ConnectData struct {
 	Session *Session
 	Context *RWeb.Context
+	Caller  *Replier
 }
 
 var NewConnectDataPool = sync.Pool{New: func() interface{} {

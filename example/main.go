@@ -7,7 +7,7 @@ import (
 )
 
 func t(replier *WebsocketDealer.Replier, session *WebsocketDealer.Session, arguments []interface{}) {
-	replier.Call("test","Hi")
+	replier.Call("test", "Hi")
 	err := replier.Return("Hello World!!")
 	if err != nil {
 		fmt.Println(err)

@@ -6,6 +6,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -18,8 +19,8 @@ func (z *Replier) Call(functionName string, args ...interface{}) (interface{}, e
 	defer requestPool.Put(call)
 	call.Function = functionName
 	call.Argument = args
-	id := uint64(1)
-	call.Id = jsoniter.Number(strconv.FormatUint(id,10))
+	id := atomic.AddUint64(z.idCounter, 1)
+	call.Id = jsoniter.Number(strconv.FormatUint(id, 10))
 	call.IsReply = true
 	byte, err := jsoniter.Marshal(call)
 	if err != nil {
@@ -58,4 +59,14 @@ func (z *Replier) Return(data interface{}) error {
 		return err
 	}
 	return nil
+}
+// With this function,you can turn a replier to a pure caller
+// which means that you can keep this new caller while the replier will be collected and reused by RWeb.
+func (z *Replier) ToCaller() *Replier {
+	ret := replierPool.Get().(*Replier)
+	ret.idCounter = z.idCounter
+	ret.bindReplyId = z.bindReplyId
+	ret.removeBindReplyId = z.removeBindReplyId
+	ret.conn = z.conn
+	return ret
 }
