@@ -3,6 +3,7 @@ package clientGo
 import (
 	"errors"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/modern-go/gls"
 	"reflect"
 )
 
@@ -31,6 +32,8 @@ func (z *RWebsocketClient) dealWithCall(data []byte) error {
 		id:      call.Id,
 		isReply: true,
 	}
+	replierMap [gls.GoID()] = &replier
+	defer delete(replierMap,gls.GoID())
 	var args []reflect.Value
 	if v.Type().NumIn() == len(call.Argument) + 1 {
 		args = make([]reflect.Value, len(call.Argument)+1)

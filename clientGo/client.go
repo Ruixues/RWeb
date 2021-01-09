@@ -3,6 +3,7 @@ package clientGo
 import (
 	"github.com/fasthttp/websocket"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/modern-go/gls"
 	"log"
 )
 
@@ -18,7 +19,11 @@ type RWebsocketClient struct {
 }
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
-
+var replierMap map [int64]*Replier
+func R () *Replier {
+	r,_ := replierMap[gls.GoID()]
+	return r
+}
 func NewRWebsocketClient(Address string) (ret RWebsocketClient, _ error) {
 	var err error
 	ret.server = Address
