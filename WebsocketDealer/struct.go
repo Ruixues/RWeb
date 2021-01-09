@@ -3,9 +3,12 @@ package WebsocketDealer
 import (
 	"github.com/fasthttp/websocket"
 	jsoniter "github.com/json-iterator/go"
+	"reflect"
 	"sync"
 )
 
+var sessionType = reflect.TypeOf((*Session)(nil))
+var replierType = reflect.TypeOf((*Replier)(nil))
 type StandardCall struct {
 	Function string          `json:"function"`
 	Argument []interface{}   `json:"argument"`

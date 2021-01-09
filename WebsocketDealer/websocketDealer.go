@@ -9,6 +9,7 @@ import (
 	"github.com/Ruixues/RWeb/event"
 	"github.com/fasthttp/websocket"
 	"github.com/json-iterator/go"
+	"github.com/modern-go/gls"
 	"github.com/valyala/fasthttp"
 	"strconv"
 	"sync"
@@ -16,11 +17,12 @@ import (
 
 const (
 	ModuleName    = "WebsocketDealer"
-	ModuleVersion = 0.2
+	ModuleVersion = 0.3
 )
-
+var sessionMap sync.Map
+var replierMap sync.Map
 var json = jsoniter.ConfigFastest //最快速度
-type WebsocketDealFunction func(replier *Replier, session *Session, arguments []interface{})
+type WebsocketDealFunction interface {}
 type WebsocketDealer struct {
 	link            map[string]WebsocketDealFunction
 	linkLock        *sync.RWMutex
@@ -33,7 +35,24 @@ type WebsocketDealer struct {
 	connectionNum   uint64
 	idPool NumberPool
 }
-
+// S get the session
+func S () *Session{
+	id := gls.GoID()
+	s,ok := sessionMap.Load(id)
+	if !ok {
+		return nil
+	}
+	return s.(*Session)
+}
+// R get the replier
+func R () *Replier {
+	id := gls.GoID()
+	s,ok := replierMap.Load(id)
+	if !ok {
+		return nil
+	}
+	return s.(*Replier)
+}
 func New() (r WebsocketDealer) {
 	Once.Do(InitWebsocketDealer)
 	r.link = make(map[string]WebsocketDealFunction)
@@ -205,12 +224,7 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 				Dealer = z.link[SMessage.Function]
 			}()
 			if Dealer != nil {
-				go func(Dealer WebsocketDealFunction, SMessage StandardCall) {
-					replier := makeReplier()
-					defer replierPool.Put(replier)
-					replier.id = SMessage.Id
-					Dealer(replier, s, SMessage.Argument)
-				}(Dealer, SMessage)
+				go z.Call(Dealer,SMessage,makeReplier,s)
 			}
 		}
 	})
