@@ -9,6 +9,7 @@ import (
 
 var sessionType = reflect.TypeOf((*Session)(nil))
 var replierType = reflect.TypeOf((*Replier)(nil))
+
 type StandardCall struct {
 	Function string          `json:"function"`
 	Argument []interface{}   `json:"argument"`
@@ -17,7 +18,7 @@ type StandardCall struct {
 }
 type StandardReply struct {
 	Id   jsoniter.Number `json:"id"`
-	Data string          `json:"data"`
+	Data interface{}          `json:"data"`
 }
 type Replier struct { //回复者
 	conn              *websocket.Conn

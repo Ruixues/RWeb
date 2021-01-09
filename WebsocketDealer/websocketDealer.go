@@ -19,10 +19,11 @@ const (
 	ModuleName    = "WebsocketDealer"
 	ModuleVersion = 0.3
 )
+
 var sessionMap sync.Map
 var replierMap sync.Map
 var json = jsoniter.ConfigFastest //最快速度
-type WebsocketDealFunction interface {}
+type WebsocketDealFunction interface{}
 type WebsocketDealer struct {
 	link            map[string]WebsocketDealFunction
 	linkLock        *sync.RWMutex
@@ -33,21 +34,23 @@ type WebsocketDealer struct {
 	connections     []*ConnectData
 	lockConnections *sync.RWMutex
 	connectionNum   uint64
-	idPool NumberPool
+	idPool          NumberPool
 }
+
 // S get the session
-func S () *Session{
+func S() *Session {
 	id := gls.GoID()
-	s,ok := sessionMap.Load(id)
+	s, ok := sessionMap.Load(id)
 	if !ok {
 		return nil
 	}
 	return s.(*Session)
 }
+
 // R get the replier
-func R () *Replier {
+func R() *Replier {
 	id := gls.GoID()
-	s,ok := replierMap.Load(id)
+	s, ok := replierMap.Load(id)
 	if !ok {
 		return nil
 	}
@@ -91,12 +94,12 @@ func (z *WebsocketDealer) BroadCastIdRange(ranger Ranger, ids []uint64) error {
 	z.lockConnections.RLock()
 	defer z.lockConnections.RUnlock()
 	for _, id := range ids {
-		if uint64(len(z.connections)) <= id {	//不存在
-			return errors.New("unused id:" + strconv.FormatUint(id,10))
+		if uint64(len(z.connections)) <= id { //不存在
+			return errors.New("unused id:" + strconv.FormatUint(id, 10))
 		}
-		connection := z.connections [id]
+		connection := z.connections[id]
 		if connection == nil {
-			return errors.New("unused id:" + strconv.FormatUint(id,10))
+			return errors.New("unused id:" + strconv.FormatUint(id, 10))
 		}
 		if err := ranger(connection); err != nil {
 			return err
@@ -120,8 +123,8 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 			if myId == 0 {
 				return
 			}
-			replierPool.Put(z.connections [myId].Caller)
-			z.connections [myId] = nil
+			replierPool.Put(z.connections[myId].Caller)
+			z.connections[myId] = nil
 			z.connectionNum = z.connectionNum - 1
 		}()
 		var MessageId = uint64(1)
@@ -167,12 +170,12 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 			data := &ConnectData{
 				Session: s,
 				Context: context,
-				Caller: makeReplier(),
+				Caller:  makeReplier(),
 			}
 			if uint64(len(z.connections)) <= myId {
 				z.connections = append(z.connections, data)
 			} else {
-				z.connections [myId] = data
+				z.connections[myId] = data
 			}
 		}()
 
@@ -224,7 +227,7 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 				Dealer = z.link[SMessage.Function]
 			}()
 			if Dealer != nil {
-				go z.Call(Dealer,SMessage,makeReplier,s)
+				go z.Call(Dealer, SMessage, makeReplier, s)
 			}
 		}
 	})

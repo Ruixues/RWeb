@@ -5,20 +5,27 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"log"
 )
-type BindFunction interface {}
+
+type BindFunction interface{}
+
 // The first
 type RWebsocketClient struct {
-	server string
-	conn *websocket.Conn
-	functionBind map[string]BindFunction	//The first argument of functionBind must be a *replier
+	server       string
+	conn         *websocket.Conn
+	functionBind map[string]BindFunction //The first argument of functionBind must be a *replier
+	requestId int64
+	replyConn map [int64]chan interface{}
 }
+
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
-func NewRWebsocketClient (Address string) (ret RWebsocketClient,_ error){
+
+func NewRWebsocketClient(Address string) (ret RWebsocketClient, _ error) {
+	var err error
 	ret.server = Address
 	ret.functionBind = make(map[string]BindFunction)
-	c, _, err := websocket.DefaultDialer.Dial(Address, nil)
+	ret.conn, _, err = websocket.DefaultDialer.Dial(Address, nil)
 	if err != nil {
-		return ret,err
+		return ret, err
 	}
 	go ret.listener()
 	return
@@ -33,13 +40,13 @@ func (z *RWebsocketClient) listener() {
 			return
 		}
 		var tmpStruct struct {
-			isReply bool	`json:"isReply"`
+			isReply bool `json:"isReply"`
 		}
-		if err := json.Unmarshal(message,&tmpStruct);err != nil {
+		if err := json.Unmarshal(message, &tmpStruct); err != nil {
 			log.Println(err)
 			continue
 		}
-		if tmpStruct.isReply {	//是回复消息
+		if tmpStruct.isReply { //是回复消息
 			go z.dealWithReply(message)
 		} else {
 			go z.dealWithCall(message)

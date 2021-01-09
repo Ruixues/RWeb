@@ -11,11 +11,12 @@ type Session struct {
 	lock       *sync.RWMutex
 }
 
-var sessionPool = sync.Pool{New: func() interface{} {
-	ret := new(Session)
-	ret.lock = &sync.RWMutex{}
-	return ret
-}}
+var sessionPool = sync.Pool{
+	New: func() interface{} {
+		ret := new(Session)
+		ret.lock = &sync.RWMutex{}
+		return ret
+	}}
 
 func NewSession() *Session {
 	s := sessionPool.Get().(*Session)

@@ -60,6 +60,7 @@ func (z *Replier) Return(data interface{}) error {
 	}
 	return nil
 }
+
 // With this function,you can turn a replier to a pure caller
 // which means that you can keep this new caller while the replier will be collected and reused by RWeb.
 func (z *Replier) ToCaller() *Replier {
