@@ -6,7 +6,7 @@ import (
 	"github.com/Ruixues/RWeb/WebsocketDealer"
 )
 
-func t(replier *WebsocketDealer.Replier, session *WebsocketDealer.Session, arguments []interface{}) {
+func t(replier *WebsocketDealer.Replier, session *WebsocketDealer.Session) {
 	replier.Call("test", "Hi")
 	err := replier.Return("Hello World!!")
 	if err != nil {
@@ -14,7 +14,7 @@ func t(replier *WebsocketDealer.Replier, session *WebsocketDealer.Session, argum
 	}
 }
 func main() {
-	fmt.Println("Go")
+	fmt.Println("Server is running")
 	router := RWeb.NewDefaultRouter()
 	router.Bind("/test", RWeb.MethodAll, func(ctx *RWeb.Context) {
 		ctx.Write([]byte("<html><h1>Hello RWeb!</h1></html>"))

@@ -5,10 +5,11 @@ import (
 	"reflect"
 )
 
-func (z *WebsocketDealer) Call(Dealer WebsocketDealFunction, SMessage StandardCall, makeReplier func() *Replier, s *Session) {
+func (z *WebsocketDealer) callBind(Dealer WebsocketDealFunction, SMessage StandardCall, makeReplier func() *Replier, s *Session) {
 	replier := makeReplier()
 	defer replierPool.Put(replier)
 	replier.id = SMessage.Id
+	replier.haveReplied = false
 	goId := gls.GoID()
 	replierMap.Store(goId, replier)
 	defer replierMap.Delete(goId)
@@ -16,7 +17,7 @@ func (z *WebsocketDealer) Call(Dealer WebsocketDealFunction, SMessage StandardCa
 	defer sessionMap.Delete(goId)
 	f := reflect.ValueOf(Dealer)
 	// Fill the arguments
-	if f.Type().NumIn() != len(SMessage.Argument) && f.Type().NumIn() != len(SMessage.Argument) + 2 {
+	if f.Type().NumIn() != len(SMessage.Argument) && f.Type().NumIn() != len(SMessage.Argument)+2 {
 		z.log.FrameworkPrintMessage(ModuleName, "unmatched argument num", 5)
 		return
 	}
@@ -36,5 +37,8 @@ func (z *WebsocketDealer) Call(Dealer WebsocketDealFunction, SMessage StandardCa
 	}
 	// 开始调用
 	f.Call(args)
+	if !replier.haveReplied {
+		replier.Return(nil)
+	}
 	return
 }

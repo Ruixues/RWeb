@@ -227,7 +227,7 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 				Dealer = z.link[SMessage.Function]
 			}()
 			if Dealer != nil {
-				go z.Call(Dealer, SMessage, makeReplier, s)
+				go z.callBind(Dealer, SMessage, makeReplier, s)
 			}
 		}
 	})

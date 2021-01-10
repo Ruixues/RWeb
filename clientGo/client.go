@@ -1,6 +1,7 @@
 package clientGo
 
 import (
+	"errors"
 	"github.com/fasthttp/websocket"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/modern-go/gls"
@@ -14,14 +15,15 @@ type RWebsocketClient struct {
 	server       string
 	conn         *websocket.Conn
 	functionBind map[string]BindFunction //The first argument of functionBind must be a *replier
-	requestId int64
-	replyConn map [int64]chan interface{}
+	requestId    int64
+	replyConn    map[int64]chan interface{}
 }
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
-var replierMap map [int64]*Replier
-func R () *Replier {
-	r,_ := replierMap[gls.GoID()]
+var replierMap = make(map[int64]*Replier)
+
+func R() *Replier {
+	r, _ := replierMap[gls.GoID()]
 	return r
 }
 func NewRWebsocketClient(Address string) (ret RWebsocketClient, _ error) {
@@ -29,6 +31,7 @@ func NewRWebsocketClient(Address string) (ret RWebsocketClient, _ error) {
 	ret.server = Address
 	ret.functionBind = make(map[string]BindFunction)
 	ret.conn, _, err = websocket.DefaultDialer.Dial(Address, nil)
+	ret.replyConn = make(map[int64]chan interface{})
 	if err != nil {
 		return ret, err
 	}
@@ -45,16 +48,24 @@ func (z *RWebsocketClient) listener() {
 			return
 		}
 		var tmpStruct struct {
-			isReply bool `json:"isReply"`
+			Reply bool `json:"reply"`
 		}
 		if err := json.Unmarshal(message, &tmpStruct); err != nil {
 			log.Println(err)
 			continue
 		}
-		if tmpStruct.isReply { //是回复消息
+		if tmpStruct.Reply { //是回复消息
 			go z.dealWithReply(message)
 		} else {
 			go z.dealWithCall(message)
 		}
 	}
+}
+func (z *RWebsocketClient) Bind(FunctionName string, Function BindFunction) error {
+	_, ok := z.functionBind[FunctionName]
+	if ok {
+		return errors.New("the function:" + FunctionName + " has existed")
+	}
+	z.functionBind[FunctionName] = Function
+	return nil
 }

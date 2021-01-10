@@ -18,7 +18,7 @@ type StandardCall struct {
 }
 type StandardReply struct {
 	Id   jsoniter.Number `json:"id"`
-	Data interface{}          `json:"data"`
+	Data interface{}     `json:"data"`
 }
 type Replier struct { //回复者
 	conn              *websocket.Conn
@@ -26,6 +26,7 @@ type Replier struct { //回复者
 	id                jsoniter.Number
 	bindReplyId       func(id uint64, c chan StandardReply)
 	removeBindReplyId func(id uint64)
+	haveReplied       bool //是否已经进行了回复。如果没有进行回复，RWeb将自动回复nil
 }
 
 var replierPool = &sync.Pool{
@@ -54,8 +55,9 @@ func removeConn(conn *Conn) {
 }
 
 type WebsocketResponse struct {
-	Id   jsoniter.Number `json:"id"`
-	Data interface{}     `json:"data"`
+	Id      jsoniter.Number `json:"id"`
+	Data    interface{}     `json:"data"`
+	IsReply bool            `json:"reply"`
 }
 
 var responsePool = &sync.Pool{

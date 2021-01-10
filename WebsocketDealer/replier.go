@@ -21,7 +21,7 @@ func (z *Replier) Call(functionName string, args ...interface{}) (interface{}, e
 	call.Argument = args
 	id := atomic.AddUint64(z.idCounter, 1)
 	call.Id = jsoniter.Number(strconv.FormatUint(id, 10))
-	call.IsReply = true
+	call.IsReply = false
 	byte, err := jsoniter.Marshal(call)
 	if err != nil {
 		return nil, err
@@ -50,6 +50,7 @@ func (z *Replier) Return(data interface{}) error {
 	defer responsePool.Put(res)
 	res.Data = data
 	res.Id = z.id
+	res.IsReply = true
 	byte, err := json.Marshal(*res)
 	if err != nil {
 		return err
