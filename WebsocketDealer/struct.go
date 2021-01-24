@@ -1,10 +1,11 @@
 package WebsocketDealer
 
 import (
-	"github.com/fasthttp/websocket"
-	jsoniter "github.com/json-iterator/go"
 	"reflect"
 	"sync"
+
+	"github.com/fasthttp/websocket"
+	jsoniter "github.com/json-iterator/go"
 )
 
 var sessionType = reflect.TypeOf((*Session)(nil))

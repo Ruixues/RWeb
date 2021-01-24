@@ -1,8 +1,10 @@
 package RWeb
 
 import (
-	"github.com/fatih/color"
+	"fmt"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 type Log interface {
@@ -22,4 +24,5 @@ func (z *DefaultLog) FrameworkPrintMessage(Module, Message string, Level int) {
 	moduleName.Print(Module)
 	sendTime.Print(time.Now().Format("2006-01-02 15:04:05"))
 	message.Print(Message)
+	fmt.Println()
 }

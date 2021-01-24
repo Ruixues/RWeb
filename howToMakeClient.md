@@ -9,7 +9,7 @@
 {
 "id" : 请求ID,
 "data": 数据,
-"isReply": true }
+"reply": true }
 
 服务器可能也会主动调用客户端函数.调用形式为:
 {
@@ -21,7 +21,7 @@
 {
 "id" : 请求ID,
 "data": 数据
-"IsReply": true }
+"reply": true }
 
 默认超时为3s
 

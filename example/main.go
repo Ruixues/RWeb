@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/Ruixues/RWeb"
 	"github.com/Ruixues/RWeb/WebsocketDealer"
 )
 
 func t(replier *WebsocketDealer.Replier, session *WebsocketDealer.Session) {
-	replier.Call("test", "Hi")
+	res, _ := replier.Call("test", "Hi")
+	fmt.Println(res)
 	err := replier.Return("Hello World!!")
 	if err != nil {
 		fmt.Println(err)
