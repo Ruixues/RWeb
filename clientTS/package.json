@@ -1,0 +1,17 @@
+{
+  "name": "clientts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "rweb.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ws": "^7.4.2"
+  },
+  "devDependencies": {
+    "@types/ws": "^7.4.0"
+  }
+}

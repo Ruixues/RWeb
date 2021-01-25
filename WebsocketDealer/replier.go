@@ -2,12 +2,13 @@ package WebsocketDealer
 
 import (
 	"errors"
-	"github.com/fasthttp/websocket"
-	jsoniter "github.com/json-iterator/go"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/fasthttp/websocket"
+	jsoniter "github.com/json-iterator/go"
 )
 
 var chanBoolPool = sync.Pool{New: func() interface{} {
@@ -40,6 +41,9 @@ func (z *Replier) Call(functionName string, args ...interface{}) (interface{}, e
 	}
 }
 func (z *Replier) Return(data interface{}) error {
+	defer func() {
+		recover()
+	}()
 	if z.id.String() == "0" {
 		panic("Unexpected call to reply.It is not a real replier.Just a caller")
 	}
