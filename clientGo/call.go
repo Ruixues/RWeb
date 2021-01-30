@@ -2,12 +2,13 @@ package clientGo
 
 import (
 	"errors"
-	jsoniter "github.com/json-iterator/go"
-	"github.com/modern-go/gls"
 	"reflect"
 	"strconv"
 	"sync/atomic"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
+	"github.com/modern-go/gls"
 )
 
 type StandardCall struct {
@@ -59,6 +60,8 @@ func (z *RWebsocketClient) dealWithCall(data []byte) error {
 	}
 	return nil
 }
+
+// Call 调用客户端函数 阻塞
 func (z *RWebsocketClient) Call(FunctionName string, Arguments ...interface{}) (interface{}, error) {
 	// 准备调用服务器
 	callId := atomic.AddInt64(&z.requestId, 1)
@@ -80,4 +83,23 @@ func (z *RWebsocketClient) Call(FunctionName string, Arguments ...interface{}) (
 	case data := <-ch:
 		return data, nil
 	}
+}
+
+// CallNotWait 不等待回复
+func (z *RWebsocketClient) CallNotWait(FunctionName string, Arguments ...interface{}) error {
+	// 准备调用服务器
+	callId := atomic.AddInt64(&z.requestId, 1)
+	// 挂载chan
+	ch := make(chan interface{})
+	z.replyConn[callId] = ch
+	err := z.conn.WriteJSON(StandardCall{
+		Function: FunctionName,
+		Argument: Arguments,
+		Id:       jsoniter.Number(strconv.FormatInt(callId, 10)),
+		IsReply:  false,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
