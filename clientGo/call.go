@@ -88,14 +88,11 @@ func (z *RWebsocketClient) Call(FunctionName string, Arguments ...interface{}) (
 // CallNotWait 不等待回复
 func (z *RWebsocketClient) CallNotWait(FunctionName string, Arguments ...interface{}) error {
 	// 准备调用服务器
-	callId := atomic.AddInt64(&z.requestId, 1)
 	// 挂载chan
-	ch := make(chan interface{})
-	z.replyConn[callId] = ch
 	err := z.conn.WriteJSON(StandardCall{
 		Function: FunctionName,
 		Argument: Arguments,
-		Id:       jsoniter.Number(strconv.FormatInt(callId, 10)),
+		Id:       jsoniter.Number(strconv.FormatInt(atomic.AddInt64(&z.requestId, 1), 10)),
 		IsReply:  false,
 	})
 	if err != nil {

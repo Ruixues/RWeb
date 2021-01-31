@@ -40,6 +40,23 @@ func (z *Replier) Call(functionName string, args ...interface{}) (interface{}, e
 		return reply.Data, nil
 	}
 }
+
+// CallNotWait 不等待回复
+func (z *Replier) CallNotWait(functionName string, args ...interface{}) error {
+	call := requestPool.Get().(*StandardCall)
+	defer requestPool.Put(call)
+	call.Function = functionName
+	call.Argument = args
+	id := atomic.AddUint64(z.idCounter, 1)
+	call.Id = jsoniter.Number(strconv.FormatUint(id, 10))
+	call.IsReply = false
+	byte, err := jsoniter.Marshal(call)
+	if err != nil {
+		return err
+	}
+	z.conn.WriteMessage(websocket.TextMessage, byte)
+	return nil
+}
 func (z *Replier) Return(data interface{}) error {
 	defer func() {
 		recover()
