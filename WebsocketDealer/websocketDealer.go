@@ -25,7 +25,7 @@ var sessionMap sync.Map
 var replierMap sync.Map
 var json = jsoniter.ConfigFastest //最快速度
 type WebsocketDealFunction interface{}
-type WebsocketCallInterceptor func(functionName string, replier *Replier, args []interface{}) bool
+type WebsocketCallInterceptor func(functionName string, replier *Replier, session *Session, args []interface{}) bool
 type WebsocketDealer struct {
 	link            map[string]WebsocketDealFunction
 	linkLock        *sync.RWMutex

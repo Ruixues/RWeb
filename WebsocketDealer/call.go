@@ -18,7 +18,7 @@ func (z *WebsocketDealer) callBind(Dealer WebsocketDealFunction, SMessage Standa
 	defer sessionMap.Delete(goId)
 	// 开始调用 拦截器
 	for _, f := range z.interceptor {
-		if !f(SMessage.Function, replier, SMessage.Argument) {
+		if !f(SMessage.Function, replier, s, SMessage.Argument) {
 			return
 		}
 	}
