@@ -1,8 +1,9 @@
 package WebsocketDealer
 
 import (
-	"github.com/modern-go/gls"
 	"reflect"
+
+	"github.com/modern-go/gls"
 )
 
 func (z *WebsocketDealer) callBind(Dealer WebsocketDealFunction, SMessage StandardCall, makeReplier func() *Replier, s *Session) {
@@ -15,6 +16,12 @@ func (z *WebsocketDealer) callBind(Dealer WebsocketDealFunction, SMessage Standa
 	defer replierMap.Delete(goId)
 	sessionMap.Store(goId, s)
 	defer sessionMap.Delete(goId)
+	// 开始调用 拦截器
+	for _, f := range z.interceptor {
+		if !f(SMessage.Function, replier, SMessage.Argument) {
+			return
+		}
+	}
 	f := reflect.ValueOf(Dealer)
 	// Fill the arguments
 	if f.Type().NumIn() != len(SMessage.Argument) && f.Type().NumIn() != len(SMessage.Argument)+2 {

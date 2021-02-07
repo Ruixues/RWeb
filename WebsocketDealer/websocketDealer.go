@@ -5,25 +5,27 @@ package WebsocketDealer
 
 import (
 	"errors"
+	"strconv"
+	"sync"
+
 	"github.com/Ruixues/RWeb"
 	"github.com/Ruixues/RWeb/event"
 	"github.com/fasthttp/websocket"
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/modern-go/gls"
 	"github.com/valyala/fasthttp"
-	"strconv"
-	"sync"
 )
 
 const (
 	ModuleName    = "WebsocketDealer"
-	ModuleVersion = 0.3
+	ModuleVersion = 0.4
 )
 
 var sessionMap sync.Map
 var replierMap sync.Map
 var json = jsoniter.ConfigFastest //最快速度
 type WebsocketDealFunction interface{}
+type WebsocketCallInterceptor func(functionName string, replier *Replier, args []interface{}) bool
 type WebsocketDealer struct {
 	link            map[string]WebsocketDealFunction
 	linkLock        *sync.RWMutex
@@ -35,6 +37,7 @@ type WebsocketDealer struct {
 	lockConnections *sync.RWMutex
 	connectionNum   uint64
 	idPool          NumberPool
+	interceptor     []WebsocketCallInterceptor
 }
 
 // S get the session
@@ -56,6 +59,8 @@ func R() *Replier {
 	}
 	return s.(*Replier)
 }
+
+//New new websocket dealer
 func New() (r WebsocketDealer) {
 	Once.Do(InitWebsocketDealer)
 	r.link = make(map[string]WebsocketDealFunction)
@@ -75,11 +80,14 @@ func New() (r WebsocketDealer) {
 	r.lockConnections = &sync.RWMutex{}
 	r.Events = event.New(EventNum)
 	r.idPool = NewNumberPool(10)
+	r.interceptor = make([]WebsocketCallInterceptor, 0)
 	return
 }
 
+//Ranger broadCast ranger
 type Ranger func(data *ConnectData) error
 
+//BroadCast 广播
 func (z *WebsocketDealer) BroadCast(ranger Ranger) error {
 	z.lockConnections.RLock()
 	defer z.lockConnections.RUnlock()
@@ -251,6 +259,8 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 		return
 	}
 }
+
+//BindFunction 绑定函数
 func (z *WebsocketDealer) BindFunction(FunctionName string, Function WebsocketDealFunction) error {
 	z.linkLock.Lock()
 	defer z.linkLock.Unlock()
@@ -259,4 +269,9 @@ func (z *WebsocketDealer) BindFunction(FunctionName string, Function WebsocketDe
 	}
 	z.link[FunctionName] = Function
 	return nil
+}
+
+//AddInterceptor 添加拦截器0
+func (z *WebsocketDealer) AddInterceptor(interceptor WebsocketCallInterceptor) {
+	z.interceptor = append(z.interceptor, interceptor)
 }
