@@ -15,6 +15,7 @@ var chanBoolPool = sync.Pool{New: func() interface{} {
 	return make(chan StandardReply, 1)
 }}
 
+//Call 调用客户端函数
 func (z *Replier) Call(functionName string, args ...interface{}) (interface{}, error) {
 	call := requestPool.Get().(*StandardCall)
 	defer requestPool.Put(call)
@@ -57,12 +58,14 @@ func (z *Replier) CallNotWait(functionName string, args ...interface{}) error {
 	z.conn.WriteMessage(websocket.TextMessage, byte)
 	return nil
 }
+
+//Return 返回值
 func (z *Replier) Return(data interface{}) error {
 	defer func() {
 		recover()
 	}()
 	if z.id.String() == "0" {
-		panic("Unexpected call to reply.It is not a real replier.Just a caller")
+		panic("Unexpected call to reply .It is not a real replier.Just a caller")
 	}
 	if data == nil {
 		return nil
@@ -83,7 +86,7 @@ func (z *Replier) Return(data interface{}) error {
 	return nil
 }
 
-// With this function,you can turn a replier to a pure caller
+// ToCaller With this function,you can turn a replier to a pure caller
 // which means that you can keep this new caller while the replier will be collected and reused by RWeb.
 func (z *Replier) ToCaller() *Replier {
 	ret := replierPool.Get().(*Replier)

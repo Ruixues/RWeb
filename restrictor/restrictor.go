@@ -5,6 +5,8 @@ package restrictor
 import (
 	"sync"
 	"time"
+
+	"github.com/Ruixues/RWeb/WebsocketDealer"
 )
 
 type visit struct {
@@ -17,6 +19,7 @@ type visit struct {
 type Restrictor struct {
 	ipRecord    map[interface{}]*visit
 	accessCheck func(startTime *int64, nowNum *int64) bool
+	lastGCTime  int64
 }
 
 func defaultChecker(startTime, nowNum *int64) bool {
@@ -46,6 +49,7 @@ func (z *Restrictor) avaible(id interface{}) bool {
 	if !ok {
 		return false
 	}
+	go z.GC()
 	return z.accessCheck(&data.turnStart, &data.turnNum)
 }
 
@@ -69,6 +73,10 @@ func (z *Restrictor) Record(id interface{}) bool {
 //GC 清理无用的数据
 func (z *Restrictor) GC() {
 	nowTime := time.Now().Unix()
+	if nowTime-z.lastGCTime < 100 {
+		return
+	}
+	z.lastGCTime = nowTime
 	for k, v := range z.ipRecord {
 		if nowTime-v.turnStart > 1000 {
 			lock := &(v.lock)
@@ -77,4 +85,9 @@ func (z *Restrictor) GC() {
 			lock.Unlock()
 		}
 	}
+}
+
+//WebsocketCount For rrpc
+func (z *Restrictor) WebsocketCount(functionName string, replier *WebsocketDealer.Replier, session *WebsocketDealer.Session, args []interface{}) bool {
+	return z.Record(session.Id)
 }
