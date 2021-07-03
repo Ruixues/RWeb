@@ -117,7 +117,7 @@ func (z *WebsocketDealer) BroadCastIdRange(ranger Ranger, ids []uint64) error {
 }
 
 /**
-  使用此函数作为引擎的绑定函数
+  Handler 使用此函数作为引擎的绑定函数
 */
 func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 	s := NewSession()
@@ -186,7 +186,6 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 				z.connections[myId] = data
 			}
 		}()
-
 		for {
 			var SMessage StandardCall
 			_, message, err := ws.ReadMessage()
@@ -234,6 +233,19 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 				}
 				Dealer = z.link[SMessage.Function]
 			}()
+			//调用FunctionCall拦截器
+			call := FunctionCallPool.Get().(*FunctionCall)
+			call.Argument = SMessage.Argument
+			call.FunctionName = SMessage.Function
+			call.Session = s
+			if err := z.Events.RunEvent(EventFunctionCall, func(message event.OnMessage) error {
+				if !message(call).(bool) {
+					return errors.New("error")
+				}
+				return nil
+			}); err != nil {
+				continue //拦截器中断
+			}
 			if Dealer != nil {
 				go z.callBind(Dealer, SMessage, makeReplier, s)
 			}
@@ -271,7 +283,7 @@ func (z *WebsocketDealer) BindFunction(FunctionName string, Function WebsocketDe
 	return nil
 }
 
-//AddInterceptor 添加拦截器0
+//AddInterceptor 添加拦截器
 func (z *WebsocketDealer) AddInterceptor(interceptor WebsocketCallInterceptor) {
 	z.interceptor = append(z.interceptor, interceptor)
 }

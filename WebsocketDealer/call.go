@@ -47,5 +47,4 @@ func (z *WebsocketDealer) callBind(Dealer WebsocketDealFunction, SMessage Standa
 	if !replier.haveReplied {
 		replier.Return(nil)
 	}
-	return
 }

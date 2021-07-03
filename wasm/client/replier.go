@@ -25,7 +25,7 @@ func (z *Replier) Reply(Data interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = z.father.conn.Write(z.father.ctx,websocket.MessageText, byte)
+	err = z.father.conn.Write(z.father.ctx, websocket.MessageText, byte)
 	if err != nil {
 		return err
 	}

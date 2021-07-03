@@ -21,7 +21,7 @@ type RWebsocketClient struct {
 	functionBind map[string]BindFunction //The first argument of functionBind must be a *replier
 	requestId    int64
 	replyConn    map[int64]chan interface{}
-	ctx context.Context
+	ctx          context.Context
 }
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -38,7 +38,7 @@ func NewRWebsocketClient(Address string) (ret RWebsocketClient, _ error) {
 	//var cancel context.CancelFunc
 	ret.ctx, _ = context.WithTimeout(context.Background(), time.Minute)
 	//defer cancel()
-	ret.conn, _, err = websocket.Dial(ret.ctx,Address,nil)
+	ret.conn, _, err = websocket.Dial(ret.ctx, Address, nil)
 	ret.replyConn = make(map[int64]chan interface{})
 	if err != nil {
 		return ret, err
@@ -48,7 +48,7 @@ func NewRWebsocketClient(Address string) (ret RWebsocketClient, _ error) {
 }
 
 func (z *RWebsocketClient) listener() {
-	defer z.conn.Close(0,"client is fucked down")
+	defer z.conn.Close(0, "client is fucked down")
 	for {
 		_, message, err := z.conn.Read(z.ctx)
 		if err != nil {

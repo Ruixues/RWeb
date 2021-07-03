@@ -1,9 +1,13 @@
 class StandardCall {
-  String Function;
-  List<dynamic> Argument;
-  int Id;
-  bool IsReply;
-  StandardCall({this.Function, this.Argument, this.Id, this.IsReply}) {}
+  late String Function;
+  late List<dynamic> Argument;
+  late int Id;
+  late bool IsReply;
+  StandardCall(
+      {required this.Function,
+      required this.Argument,
+      required this.Id,
+      required this.IsReply}) {}
   StandardCall.fromJson(Map<String, dynamic> json) {
     Function = json["function"];
     Argument = json["argument"];
@@ -15,10 +19,10 @@ class StandardCall {
 }
 
 class StandardReply {
-  int Id;
-  bool Reply;
-  dynamic Data;
-  StandardReply({this.Id, this.Reply, this.Data}) {}
+  late int Id;
+  late bool Reply;
+  late dynamic Data;
+  StandardReply({required this.Id, required this.Reply, required this.Data}) {}
   Map<String, dynamic> toJson() {
     return {"id": Id, "reply": Reply, "data": Data};
   }

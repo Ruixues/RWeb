@@ -66,13 +66,13 @@ func (z *RWebsocketClient) Call(FunctionName string, Arguments ...interface{}) (
 	// 挂载chan
 	ch := make(chan interface{})
 	z.replyConn[callId] = ch
-	b,_ := json.Marshal(StandardCall{
+	b, _ := json.Marshal(StandardCall{
 		Function: FunctionName,
 		Argument: Arguments,
 		Id:       jsoniter.Number(strconv.FormatInt(callId, 10)),
 		IsReply:  false,
 	})
-	err := z.conn.Write(z.ctx,websocket.MessageText,b)
+	err := z.conn.Write(z.ctx, websocket.MessageText, b)
 	if err != nil {
 		return nil, err
 	}
