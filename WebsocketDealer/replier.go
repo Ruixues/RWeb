@@ -28,7 +28,7 @@ func (z *Replier) Call(functionName string, args ...interface{}) (interface{}, e
 	if err != nil {
 		return nil, err
 	}
-	byte = z.coder.Encode(byte)
+	byte = z.encode(byte)
 	c := chanBoolPool.Get().(chan StandardReply)
 	z.bindReplyId(id, c)
 	z.conn.WriteMessage(websocket.TextMessage, byte)
@@ -56,7 +56,7 @@ func (z *Replier) CallNotWait(functionName string, args ...interface{}) error {
 	if err != nil {
 		return err
 	}
-	byte = z.coder.Encode(byte)
+	byte = z.encode(byte)
 	z.conn.WriteMessage(websocket.TextMessage, byte)
 	return nil
 }
@@ -81,7 +81,7 @@ func (z *Replier) Return(data interface{}) error {
 	if err != nil {
 		return err
 	}
-	byte = z.coder.Encode(byte)
+	byte = z.encode(byte)
 	err = z.conn.WriteMessage(websocket.TextMessage, byte)
 	if err != nil {
 		return err

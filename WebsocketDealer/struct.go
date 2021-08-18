@@ -28,7 +28,8 @@ type Replier struct { //回复者
 	bindReplyId       func(id uint64, c chan StandardReply)
 	removeBindReplyId func(id uint64)
 	haveReplied       bool //是否已经进行了回复。如果没有进行回复，RWeb将自动回复nil
-	coder             Coder
+	encode            func([]byte) []byte
+	decode            func([]byte) ([]byte, error)
 }
 
 var replierPool = &sync.Pool{

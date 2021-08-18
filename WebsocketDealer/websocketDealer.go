@@ -159,7 +159,8 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 		}
 		makeReplier := func() *Replier {
 			replier := replierPool.Get().(*Replier)
-			replier.coder = z.coder
+			replier.encode = z.encodeData
+			replier.decode = z.decodeData
 			replier.conn = ws
 			replier.bindReplyId = bindReplyId
 			replier.removeBindReplyId = removeBindReplyId
