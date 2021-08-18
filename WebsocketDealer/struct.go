@@ -37,25 +37,6 @@ var replierPool = &sync.Pool{
 	},
 }
 
-type Conn struct {
-	conn *websocket.Conn
-}
-
-var connPool = &sync.Pool{
-	New: func() interface{} {
-		return new(Conn)
-	},
-}
-
-func newConn(conn *websocket.Conn) (ret *Conn) {
-	ret = connPool.Get().(*Conn)
-	ret.conn = conn
-	return
-}
-func removeConn(conn *Conn) {
-	connPool.Put(conn)
-}
-
 type WebsocketResponse struct {
 	Id      jsoniter.Number `json:"id"`
 	Data    interface{}     `json:"data"`
