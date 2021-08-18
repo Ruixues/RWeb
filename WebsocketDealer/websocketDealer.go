@@ -38,6 +38,7 @@ type WebsocketDealer struct {
 	connectionNum   uint64
 	idPool          NumberPool
 	interceptor     []WebsocketCallInterceptor
+	coder           Coder
 }
 
 // S get the session
@@ -116,6 +117,19 @@ func (z *WebsocketDealer) BroadCastIdRange(ranger Ranger, ids []uint64) error {
 	return nil
 }
 
+func (z *WebsocketDealer) encodeData(data []byte) []byte {
+	if z.coder == nil {
+		return data
+	}
+	return z.coder.Encode(data)
+}
+func (z *WebsocketDealer) decodeData(data []byte) ([]byte, error) {
+	if z.coder == nil {
+		return data, nil
+	}
+	return z.coder.Decode(data)
+}
+
 /**
   Handler 使用此函数作为引擎的绑定函数
 */
@@ -145,6 +159,7 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 		}
 		makeReplier := func() *Replier {
 			replier := replierPool.Get().(*Replier)
+			replier.coder = z.coder
 			replier.conn = ws
 			replier.bindReplyId = bindReplyId
 			replier.removeBindReplyId = removeBindReplyId
@@ -194,6 +209,11 @@ func (z *WebsocketDealer) Handler(context *RWeb.Context) {
 				break
 			}
 			//开始处理到标准格式
+			message, err = z.decodeData(message)
+			if err != nil {
+				z.log.FrameworkPrintMessage(ModuleName, err.Error(), -2)
+				break
+			}
 			SMessage.IsReply = false
 			err = json.Unmarshal(message, &SMessage)
 			if err != nil {

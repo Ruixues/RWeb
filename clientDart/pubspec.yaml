@@ -1,4 +1,6 @@
-name: RWeb
+name: rweb
+description: Ruixue rweb dart client
+homepage: https://github.com/Ruixues/RWeb
 version: 0.0.1
 environment:
   sdk: '>=2.12.0 <3.0.0'

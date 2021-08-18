@@ -57,7 +57,6 @@ class RWebClient {
     }
     // 那就是函数调用
     String? functionName = data['function'];
-    print("Call:" + (functionName ?? ""));
     if (functionName == null) return;
     List<dynamic> arguments = data['argument'] ?? List.empty();
     int? id = data['id'];

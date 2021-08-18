@@ -3,54 +3,54 @@
   "packages": [
     {
       "name": "async",
-      "rootUri": "file:///C:/Users/Dorbm/AppData/Local/Pub/Cache/hosted/mirrors.tuna.tsinghua.edu.cn%2547dart-pub/async-2.7.0",
+      "rootUri": "file:///C:/Users/Dorbm/AppData/Local/Pub/Cache/hosted/pub.flutter-io.cn/async-2.8.2",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },
     {
       "name": "collection",
-      "rootUri": "file:///C:/Users/Dorbm/AppData/Local/Pub/Cache/hosted/mirrors.tuna.tsinghua.edu.cn%2547dart-pub/collection-1.15.0",
+      "rootUri": "file:///C:/Users/Dorbm/AppData/Local/Pub/Cache/hosted/pub.flutter-io.cn/collection-1.15.0",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },
     {
       "name": "crypto",
-      "rootUri": "file:///C:/Users/Dorbm/AppData/Local/Pub/Cache/hosted/mirrors.tuna.tsinghua.edu.cn%2547dart-pub/crypto-3.0.1",
+      "rootUri": "file:///C:/Users/Dorbm/AppData/Local/Pub/Cache/hosted/pub.flutter-io.cn/crypto-3.0.1",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },
     {
       "name": "meta",
-      "rootUri": "file:///C:/Users/Dorbm/AppData/Local/Pub/Cache/hosted/mirrors.tuna.tsinghua.edu.cn%2547dart-pub/meta-1.4.0",
+      "rootUri": "file:///C:/Users/Dorbm/AppData/Local/Pub/Cache/hosted/pub.flutter-io.cn/meta-1.7.0",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },
     {
       "name": "stream_channel",
-      "rootUri": "file:///C:/Users/Dorbm/AppData/Local/Pub/Cache/hosted/mirrors.tuna.tsinghua.edu.cn%2547dart-pub/stream_channel-2.1.0",
+      "rootUri": "file:///C:/Users/Dorbm/AppData/Local/Pub/Cache/hosted/pub.flutter-io.cn/stream_channel-2.1.0",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },
     {
       "name": "typed_data",
-      "rootUri": "file:///C:/Users/Dorbm/AppData/Local/Pub/Cache/hosted/mirrors.tuna.tsinghua.edu.cn%2547dart-pub/typed_data-1.3.0",
+      "rootUri": "file:///C:/Users/Dorbm/AppData/Local/Pub/Cache/hosted/pub.flutter-io.cn/typed_data-1.3.0",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },
     {
       "name": "web_socket_channel",
-      "rootUri": "file:///C:/Users/Dorbm/AppData/Local/Pub/Cache/hosted/mirrors.tuna.tsinghua.edu.cn%2547dart-pub/web_socket_channel-2.1.0",
+      "rootUri": "file:///C:/Users/Dorbm/AppData/Local/Pub/Cache/hosted/pub.flutter-io.cn/web_socket_channel-2.1.0",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     },
     {
-      "name": "RWeb",
+      "name": "rweb",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "2.12"
     }
   ],
-  "generated": "2021-07-03T03:29:57.559193Z",
+  "generated": "2021-08-18T03:20:26.882307Z",
   "generator": "pub",
-  "generatorVersion": "2.13.3"
+  "generatorVersion": "2.14.0-377.4.beta"
 }

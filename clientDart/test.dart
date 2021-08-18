@@ -11,7 +11,7 @@ Future<int> main() async {
     reply("Hi!");
   });
   print("Go");
-  c.call("test", List.empty());
-  print("Called");
+  var ans = await c.call("test", List.empty());
+  print("Called" + ".the response is " + ans);
   return 0;
 }
