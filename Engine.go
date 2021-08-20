@@ -45,3 +45,12 @@ func (z *Engine) RunAndServe(address string) error {
 	}
 	return z.server.ListenAndServe(address)
 }
+func (z *Engine) RunAndServeTLS(address string,certData,keyData []byte) error {
+	if z.router == nil {
+		return errors.New("the router of engine hasn't been set")
+	}
+	z.server = &fasthttp.Server{
+		Handler: z.handler,
+	}
+	return z.server.ListenAndServeTLSEmbed(address,certData,keyData)
+}
