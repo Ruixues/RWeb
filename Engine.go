@@ -53,7 +53,7 @@ func (z *Engine) waitShutdown() {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
-	if err := z.server.Shutdown();err != nil {
+	if err := z.server.Shutdown(); err != nil {
 		fmt.Println(err)
 	}
 }

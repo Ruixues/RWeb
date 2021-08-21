@@ -69,8 +69,11 @@ func (z *Context) SaveUploadedFile(file *multipart.FileHeader, dst string) error
 	_, err = ft.Write(buf)
 	return err
 }
-func (z *Context)Redirect(uri string, statusCode int) {
-	z.RawCtx.Redirect(uri,statusCode)
+func (z *Context) Redirect(uri string, statusCode int) {
+	z.RawCtx.Redirect(uri, statusCode)
+}
+func (z *Context) Cookie(key string)[]byte {
+	return z.RawCtx.Request.Header.Cookie(key)
 }
 var contextPool = &sync.Pool{
 	New: func() interface{} {
