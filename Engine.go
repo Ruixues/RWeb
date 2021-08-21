@@ -5,7 +5,10 @@ package RWeb
 
 import (
 	"errors"
+	"fmt"
 	"github.com/valyala/fasthttp"
+	"os"
+	"os/signal"
 )
 
 type Engine struct {
@@ -43,14 +46,24 @@ func (z *Engine) RunAndServe(address string) error {
 	z.server = &fasthttp.Server{
 		Handler: z.handler,
 	}
+	go z.waitShutdown()
 	return z.server.ListenAndServe(address)
 }
-func (z *Engine) RunAndServeTLS(address string,certData,keyData []byte) error {
+func (z *Engine) waitShutdown() {
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	if err := z.server.Shutdown();err != nil {
+		fmt.Println(err)
+	}
+}
+func (z *Engine) RunAndServeTLS(address string, certData, keyData []byte) error {
 	if z.router == nil {
 		return errors.New("the router of engine hasn't been set")
 	}
 	z.server = &fasthttp.Server{
 		Handler: z.handler,
 	}
-	return z.server.ListenAndServeTLSEmbed(address,certData,keyData)
+	go z.waitShutdown()
+	return z.server.ListenAndServeTLSEmbed(address, certData, keyData)
 }

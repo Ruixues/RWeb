@@ -42,6 +42,7 @@ func (z *GlobalHandler) UserBeat(key interface{}) bool {
 	user.(*userPackage).lastBeatTime = time.Now()
 	return true
 }
+
 // SetMaxHandleTime when it takes too long for a user to send a heart beat message,the user will be kicked off from the server.
 // The MaxHandleTime is the limit.
 func (z *GlobalHandler) SetMaxHandleTime(time time.Duration) {
