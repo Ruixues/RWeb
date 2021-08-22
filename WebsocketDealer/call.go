@@ -35,11 +35,31 @@ func (z *WebsocketDealer) callBind(Dealer WebsocketDealFunction, SMessage Standa
 		args[1] = reflect.ValueOf(s)
 		for i, v := range SMessage.Argument {
 			args[i+2] = reflect.ValueOf(v)
+			realV := args[i+2].Float()
+			var nextV interface{} = realV
+			switch f.Type().In(i + 2) {
+			case int64Type:
+				nextV = int64(realV)
+			case intType:
+				nextV = int(realV)
+			}
+			args[i+2] = reflect.ValueOf(nextV)
 		}
 	} else {
 		args = make([]reflect.Value, len(SMessage.Argument))
 		for i, v := range SMessage.Argument {
 			args[i] = reflect.ValueOf(v)
+			if args[i].Type() == float64Type { //数字类型，判断一下接收函数
+				realV := args[i].Float()
+				var nextV interface{} = realV
+				switch f.Type().In(i) {
+				case int64Type:
+					nextV = int64(realV)
+				case intType:
+					nextV = int(realV)
+				}
+				args[i] = reflect.ValueOf(nextV)
+			}
 		}
 	}
 	// 开始调用

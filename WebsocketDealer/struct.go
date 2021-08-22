@@ -10,6 +10,9 @@ import (
 
 var sessionType = reflect.TypeOf((*Session)(nil))
 var replierType = reflect.TypeOf((*Replier)(nil))
+var float64Type = reflect.TypeOf(float64(0))
+var intType = reflect.TypeOf(int(0))
+var int64Type = reflect.TypeOf(int64(0))
 
 type StandardCall struct {
 	Function string          `json:"function"`
