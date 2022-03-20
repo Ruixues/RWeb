@@ -20,9 +20,9 @@ func main() {
 	router := RWeb.NewDefaultRouter()
 	router.Bind("/test", RWeb.MethodAll, func(ctx *RWeb.Context) {
 		ctx.Write([]byte("<html><h1>Hello RWeb!</h1></html>"))
-	})
+	}, []string{})
 	ws := WebsocketDealer.New()
-	router.Bind("/t", RWeb.MethodAll, ws.Handler)
+	router.Bind("/t", RWeb.MethodAll, ws.Handler, []string{})
 	ws.BindFunction("test", t)
 	Engine := RWeb.NewEngine(&router)
 	err := Engine.RunAndServe("0.0.0.0:1111")

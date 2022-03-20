@@ -6,9 +6,10 @@ package RWeb
 import (
 	"errors"
 	"fmt"
-	"github.com/valyala/fasthttp"
 	"os"
 	"os/signal"
+
+	"github.com/valyala/fasthttp"
 )
 
 type Engine struct {
@@ -37,7 +38,7 @@ func (z *Engine) handler(ctx *fasthttp.RequestCtx) {
 	if handler == nil {
 		return
 	}
-	handler(context)
+	handler.Handler(context)
 }
 func (z *Engine) RunAndServe(address string) error {
 	if z.router == nil {

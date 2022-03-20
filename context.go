@@ -1,17 +1,19 @@
 package RWeb
 
 import (
-	jsoniter "github.com/json-iterator/go"
-	"github.com/valyala/fasthttp"
 	"mime/multipart"
 	"os"
 	"sync"
+
+	jsoniter "github.com/json-iterator/go"
+	"github.com/valyala/fasthttp"
 )
 
 type Context struct {
-	RequestUri string
-	Method     int
-	RawCtx     *fasthttp.RequestCtx
+	RequestUri  string
+	Method      int
+	RawCtx      *fasthttp.RequestCtx
+	keyValueMap map[string]any
 }
 
 var json = jsoniter.ConfigFastest
@@ -72,12 +74,21 @@ func (z *Context) SaveUploadedFile(file *multipart.FileHeader, dst string) error
 func (z *Context) Redirect(uri string, statusCode int) {
 	z.RawCtx.Redirect(uri, statusCode)
 }
-func (z *Context) Cookie(key string)[]byte {
+func (z *Context) Cookie(key string) []byte {
 	return z.RawCtx.Request.Header.Cookie(key)
 }
+func (z *Context) Value(key string) any {
+	return z.keyValueMap[key]
+}
+func (z *Context) StoreValue(key string, value any) {
+	z.keyValueMap[key] = value
+}
+
 var contextPool = &sync.Pool{
 	New: func() interface{} {
-		return new(Context)
+		return &Context{
+			keyValueMap: make(map[string]any),
+		}
 	},
 }
 
